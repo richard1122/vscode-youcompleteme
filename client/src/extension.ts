@@ -24,6 +24,7 @@ export function activate(context: ExtensionContext) {
 	}
 	
     const languages = workspace.getConfiguration('ycmd').get('enabled_languages') as string[]
+    console.log(languages)
 	// Options to control the language client
 	let clientOptions: LanguageClientOptions = {
 		// Register the server for plain text documents

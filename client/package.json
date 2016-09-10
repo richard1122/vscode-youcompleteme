@@ -34,7 +34,7 @@
             "type": "array",
             "default": ["cpp", "c"],
             "enum": [
-                "cpp", "c", "objc", "objcpp", "python", "csharp", "go", "typescript", "javascript"
+                "cpp", "c", "Objective-c", "python", "csharp", "go", "typescript", "javascript"
             ]
         }
       }

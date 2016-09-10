@@ -97,6 +97,7 @@ export default class Ycm{
             })
             cp.on('exit', (code) => {
                 console.warn(`process closed: ${code}`)
+                this.process = null
                 switch (code) {
                     case 3: reject(new Error('Unexpected error while loading the YCM core library.'))
                     case 4: reject(new Error('YCM core library not detected; you need to compile YCM before using it. Follow the instructions in the documentation.'))
@@ -194,7 +195,7 @@ export default class Ycm{
             method: method,
             headers: {},
             gzip: false,
-            timeout: 1000
+            timeout: 3000
         }
         const path = url.resolve('/', endpoint)
         if (method === 'GET') message.qs = params

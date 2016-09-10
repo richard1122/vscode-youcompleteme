@@ -1,8 +1,8 @@
 {
-  "name": "language-server-example",
-  "description": "Example implementation of a language server in node.",
+  "name": "ycm-language-server",
+  "description": "Youcompleteme language server implement for vscode",
   "version": "0.0.1",
-  "author": "Microsoft Corporation",
+  "author": "Richard He",
   "license": "MIT",
   "engines": {
     "node": "*"

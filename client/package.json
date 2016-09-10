@@ -1,7 +1,7 @@
 {
-  "name": "language-client-example",
-  "description": "VSCode part of a language server",
-  "author": "Microsoft Corporation",
+  "name": "ycm-vscode-client",
+  "description": "ycm language server client for vscode",
+  "author": "Richard He",
   "license": "MIT",
   "version": "0.0.1",
   "publisher": "vscode",
@@ -9,21 +9,33 @@
     "vscode": "^1.4.0"
   },
   "categories": [
-    "Other"
+    "Languages"
   ],
   "activationEvents": [
-    "onLanguage:cpp"
+    "*"
   ],
   "main": "./out/src/extension",
   "contributes": {
     "configuration": {
       "type": "object",
-      "title": "Example configuration",
+      "title": "Ycmd path",
       "properties": {
-        "languageServerExample.maxNumberOfProblems": {
-          "type": "number",
-          "default": 100,
-          "description": "Controls the maximum number of problems produced by the server."
+        "ycmd.path": {
+          "type": "string",
+          "default": null,
+          "description": "The directory containing the `ycmd/default_settings.json` file. Ycmd is required for this extension to work."
+        },
+        "ycmd.global_extra_config": {
+            "type": "string",
+            "default": null,
+            "description": "The fallback extra config file when no `.ycm_extra_conf.py` is found. Follow https://github.com/Valloric/YouCompleteMe#the-gycm_global_ycm_extra_conf-option for more information."
+        },
+        "ycmd.enabled_languages": {
+            "type": "array",
+            "default": ["cpp", "c"],
+            "enum": [
+                "cpp", "c", "objc", "objcpp", "python", "csharp", "go", "typescript", "javascript"
+            ]
         }
       }
     }

@@ -11,7 +11,8 @@ import {
 	InitializeParams, InitializeResult, TextDocumentPositionParams,
 	CompletionItem, CompletionItemKind
 } from 'vscode-languageserver'
-import Ycm from './ycm'
+import Ycm, {Settings} from './ycm'
+import * as _ from 'lodash'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process))
@@ -30,11 +31,6 @@ let ycm: Ycm
 
 connection.onInitialize((params): InitializeResult => {
 	workspaceRoot = params.rootPath
-    Ycm.start(workspaceRoot).then(it => ycm = it)
-    .catch(err => {
-        console.error(err)
-        return Promise.resolve(err)
-    })
 	return {
 		capabilities: {
 			// Tell the client that the server works in FULL text document sync mode
@@ -42,7 +38,7 @@ connection.onInitialize((params): InitializeResult => {
 			// Tell the client that the server support code complete
 			completionProvider: {
 				resolveProvider: true,
-                triggerCharacters: ["."]
+                triggerCharacters: [".", "->"]
 			}
 		}
 	}
@@ -52,97 +48,82 @@ connection.onInitialize((params): InitializeResult => {
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent((change) => {
     console.log(`onDidChangeContent ${JSON.stringify(change.document.uri)}`)
-	validateTextDocument(change.document)
+	// validateTextDocument(change.document)
 })
 
 // The settings interface describe the server relevant settings part
-interface Settings {
-	languageServerExample: ExampleSettings
-}
 
-// These are the example settings we defined in the client's package.json
-// file
-interface ExampleSettings {
-	maxNumberOfProblems: number
-}
 
-// hold the maxNumberOfProblems setting
-let maxNumberOfProblems: number
+let workspaceConfiguration: Settings;
+
 // The settings have changed. Is send on server activation
 // as well.
-connection.onDidChangeConfiguration((change) => {
+connection.onDidChangeConfiguration(async (change) => {
 	let settings = <Settings>change.settings
-	maxNumberOfProblems = settings.languageServerExample.maxNumberOfProblems || 100
+    console.log(JSON.stringify(settings))
+    try {
+        ensureValidConfiguration(settings)
+    } catch(err) {
+        connection.sendNotification<string>({method: 'error'}, err.message || err)
+        return
+    }
+    workspaceConfiguration = settings
+    console.log(`onDidChangeConfiguration: ${workspaceConfiguration}`)
+    if (!!ycm) ycm.reset()
+    ycm = await Ycm.start(workspaceRoot, workspaceConfiguration)
 	// Revalidate any open text documents
-	documents.all().forEach(validateTextDocument)
+	// documents.all().forEach(validateTextDocument)
 })
+
+function ensureValidConfiguration(settings: Settings) {
+    if (!settings.ycmd || !settings.ycmd.path)
+        throw new Error("Invalid ycm path")
+}
 
 documents.onDidOpen(async (event) => {
     console.log(`onDidOpen: ${event.document.uri}`)
     await ycm.readyToParse(event.document)
 })
 
-function validateTextDocument(textDocument: TextDocument): void {
-	let diagnostics: Diagnostic[] = []
-	let lines = textDocument.getText().split(/\r?\n/g)
-	let problems = 0
-	for (var i = 0; i < lines.length && problems < maxNumberOfProblems; i++) {
-		let line = lines[i]
-		let index = line.indexOf('typescript')
-		if (index >= 0) {
-			problems++
-			diagnostics.push({
-				severity: DiagnosticSeverity.Warning,
-				range: {
-					start: { line: i, character: index},
-					end: { line: i, character: index + 10 }
-				},
-				message: `${line.substr(index, 10)} should be spelled TypeScript`,
-				source: 'ex'
-			})
-		}
-	}
-	// Send the computed diagnostics to VSCode.
-	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
-}
+// function validateTextDocument(textDocument: TextDocument): void {
+// 	let diagnostics: Diagnostic[] = []
+// 	let lines = textDocument.getText().split(/\r?\n/g)
+// 	let problems = 0
+// 	for (var i = 0; i < lines.length && problems < maxNumberOfProblems; i++) {
+// 		let line = lines[i]
+// 		let index = line.indexOf('typescript')
+// 		if (index >= 0) {
+// 			problems++
+// 			diagnostics.push({
+// 				severity: DiagnosticSeverity.Warning,
+// 				range: {
+// 					start: { line: i, character: index},
+// 					end: { line: i, character: index + 10 }
+// 				},
+// 				message: `${line.substr(index, 10)} should be spelled TypeScript`,
+// 				source: 'ex'
+// 			})
+// 		}
+// 	}
+// 	// Send the computed diagnostics to VSCode.
+// 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
+// }
 
-connection.onDidChangeWatchedFiles((change) => {
-	// Monitored files have change in VSCode
-	connection.console.log('We recevied an file change event')
-})
-
+// connection.onDidChangeWatchedFiles((change) => {
+// 	// Monitored files have change in VSCode
+// 	connection.console.log('We recevied an file change event')
+// })
 
 // This handler provides the initial list of the completion items.
 connection.onCompletion(async (textDocumentPosition: TextDocumentPositionParams): Promise<CompletionItem[]> => {
     console.log(`onCompletion: ${textDocumentPosition.textDocument.uri}`)
-    return await ycm.completion(documents.get(textDocumentPosition.textDocument.uri), textDocumentPosition.position)
-	// The pass parameter contains the position of the text document in 
-	// which code complete got requested. For the example we ignore this
-	// info and always provide the same completion items.
-	// return [
-	// 	{
-	// 		label: 'TypeScript',
-	// 		kind: CompletionItemKind.Text,
-	// 		data: 1
-	// 	},
-	// 	{
-	// 		label: 'JavaScript',
-	// 		kind: CompletionItemKind.Text,
-	// 		data: 2
-	// 	}
-	// ]
+    const latestCompletions = await ycm.completion(documents.get(textDocumentPosition.textDocument.uri), textDocumentPosition.position)
+    return latestCompletions
 })
 
 // This handler resolve additional information for the item selected in
 // the completion list.
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-	if (item.data === 1) {
-		item.detail = 'TypeScript details',
-		item.documentation = 'TypeScript documentation'
-	} else if (item.data === 2) {
-		item.detail = 'JavaScript details',
-		item.documentation = 'JavaScript documentation'
-	}
 	return item
 })
 

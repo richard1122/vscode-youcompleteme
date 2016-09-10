@@ -19,16 +19,17 @@ import {
 	CompletionItem, CompletionItemKind, Position
 } from 'vscode-languageserver'
 
-const ycmdPath = `C:/Users/helin/.vim/bundle/YouCompleteMe/third_party/ycmd`
-const globalYcmConfig = path.resolve(ycmdPath, 'cpp', 'ycm', '.ycm_extra_conf.py')
-
 export default class Ycm{
     private port: number
     private hmacSecret: Buffer
     private process: childProcess.ChildProcess
     private workingDir: string
 
-    private Ycm(){}
+    private settings: Settings
+
+    private constructor(settings: Settings) {
+        this.settings = settings
+    }
 
     private findUnusedPort(): Promise<number> {
         return new Promise<number>((resolve, reject) => {
@@ -43,7 +44,7 @@ export default class Ycm{
 
     private readDefaultOptions() {
         return new Promise<any>((resolve, reject) => {
-            fs.readFile(path.resolve(ycmdPath, 'ycmd', 'default_settings.json'), {encoding: 'utf8'}, (err, data) => {
+            fs.readFile(path.resolve(this.settings.ycmd.path, 'ycmd', 'default_settings.json'), {encoding: 'utf8'}, (err, data) => {
                 if (err) reject(err)
                 else resolve(JSON.parse(data))
             })
@@ -58,7 +59,7 @@ export default class Ycm{
         this.port = unusedPort
         this.hmacSecret = hmac
         options.hmac_secret = this.hmacSecret.toString('base64')
-        options.global_ycm_extra_conf = globalYcmConfig
+        options.global_ycm_extra_conf = this.settings.ycmd.global_extra_config
         options.confirm_extra_conf = true
         const optionsFile = path.resolve(os.tmpdir(), `VSCodeYcmOptions-${crypto.randomBytes(8).toString('hex')}`)
         console.log(`processData: ${JSON.stringify(options)}`)
@@ -74,7 +75,7 @@ export default class Ycm{
         return new Promise<childProcess.ChildProcess>((resolve, reject) => {
             let cmd = 'python'
             const args = [
-                path.resolve(ycmdPath, 'ycmd'),
+                path.resolve(this.settings.ycmd.path, 'ycmd'),
                 `--port=${this.port}`,
                 `--options_file=${optionsFile}`,
                 `--idle_suicide_seconds=600`
@@ -108,9 +109,9 @@ export default class Ycm{
         })
     }
 
-    public static async start(workingDir: string): Promise<Ycm> {
+    public static async start(workingDir: string, settings: Settings): Promise<Ycm> {
         try {
-            const ycm = new Ycm()
+            const ycm = new Ycm(settings)
             ycm.workingDir = workingDir
             const data = await Promise.all<any>([ycm.findUnusedPort(), ycm.generateRandomSecret(), ycm.readDefaultOptions()]) as [number, Buffer, any]
             console.log(`data: ${data}`)
@@ -125,13 +126,34 @@ export default class Ycm{
         }
     }
 
-    public reset() {
+    public async reset() {
         if (this.process != null) {
+            if (process.platform === 'win32') await this.killOnWindows()
             //TODO: kill cmd.exe may not kill python
             this.process.kill()
             this.port = null
             this.hmacSecret = null
         }
+    }
+
+    private killOnWindows() {
+        return new Promise((resolve, reject) => {
+            const parentPid = this.process.pid
+            const wmic = childProcess.spawn('wmic', [
+                'process', 'where', `(ParentProcessId=${parentPid})`, 'get', 'processid'
+            ])
+            wmic.on('error', (err) => console.error(err))
+            let output = ''
+            wmic.stdout.on('data', (data: string) => output += data)
+            wmic.stdout.on('close', () => {
+                output.split(/\s+/)
+                    .filter(pid => /^\d+$/.test(pid))
+                    .map(pid => parseInt(pid))
+                    .filter(pid => pid != parentPid && pid > 0 && pid < Infinity)
+                    .map(pid => process.kill(pid))
+                resolve()
+            })
+        })
     }
 
     private generateHmac(data: string | Buffer): Buffer
@@ -171,7 +193,8 @@ export default class Ycm{
             port: this.port,
             method: method,
             headers: {},
-            gzip: false
+            gzip: false,
+            timeout: 1000
         }
         const path = url.resolve('/', endpoint)
         if (method === 'GET') message.qs = params
@@ -182,9 +205,8 @@ export default class Ycm{
             message.headers['Content-Length'] = payload.length
             message.body = payload
         }
-        console.log(`request: ${message}`)
+        console.log(`request: ${JSON.stringify(message)}`)
         const response = await rp(`http://localhost:${this.port}${path}`, message)
-        console.log(response)
         return JSON.parse(response)
     }
 
@@ -196,6 +218,7 @@ export default class Ycm{
         const params: RequestType = {
             filepath: document.uri,
             working_dir: this.workingDir,
+            force_semantic: true,
             file_data: {
             }
         }
@@ -221,7 +244,7 @@ export default class Ycm{
         const response = await this.request('POST', 'completions', params)
         const completions = response['completions'] as YcmCompletionItem[]
         const res = mapYcmCompletionsToLanguageServerCompletions(completions)
-        console.log(`completion: ${res}`) 
+        console.log(`completion: ycm responsed ${res.length} items`) 
         return res
     }
 
@@ -236,6 +259,7 @@ type RequestType = {
     working_dir: string,
     line_num?: number,
     column_num?: number,
+    force_semantic: boolean
     file_data: {
         [key: string]: {
             contents: string,
@@ -254,4 +278,11 @@ export type YcmCompletionItem = {
     detailed_info: string
     extra_menu_info: string
     kind: string
+}
+
+export interface Settings {
+	ycmd: {
+        path: string,
+        global_extra_config: string
+    }
 }

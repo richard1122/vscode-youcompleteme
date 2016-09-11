@@ -1,2 +1,6 @@
-# vscode-languageserver-node-example
-Sample language server implemented in Node
+# vscode-youcompleteme
+
+A [ycmd](https://github.com/Valloric/ycmd) client for vscode.
+
+## Previews
+

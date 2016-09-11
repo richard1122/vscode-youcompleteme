@@ -9,6 +9,8 @@ import * as http from 'http'
 import * as url from 'url'
 import * as qs from 'querystring'
 import * as rp from 'request-promise'
+import Uri from 'vscode-uri'
+
 import {
     mapYcmCompletionsToLanguageServerCompletions,
     mapYcmDiagnosticToLanguageServerDiagnostic
@@ -29,6 +31,7 @@ export default class Ycm{
     private workingDir: string
 
     private settings: Settings
+    private ready = false
 
     private constructor(settings: Settings) {
         this.settings = settings
@@ -64,7 +67,9 @@ export default class Ycm{
         options.hmac_secret = this.hmacSecret.toString('base64')
         options.global_ycm_extra_conf = this.settings.ycmd.global_extra_config
         options.confirm_extra_conf = true
-        const optionsFile = path.resolve(os.tmpdir(), `VSCodeYcmOptions-${crypto.randomBytes(8).toString('hex')}`)
+        options.extra_conf_globlist = []
+        options.rustSrcPath = ''
+        const optionsFile = path.resolve(os.tmpdir(), `VSCodeYcmOptions-${Date.now()}`)
         console.log(`processData: ${JSON.stringify(options)}`)
         return new Promise<string>((resolve, reject) => {
             fs.writeFile(optionsFile, JSON.stringify(options), {encoding: 'utf8'}, (err) => {
@@ -89,12 +94,11 @@ export default class Ycm{
             }
 
             const cp = childProcess.spawn(cmd, args, {
-                cwd: this.workingDir,
-                env: process.env
+                cwd: this.workingDir
             })
             console.log(`process spawn success ${cp.pid}`)
-            cp.stdout.on('data', (data) => console.log(data.toString()))
-            cp.stderr.on('data', (data) => console.error(data.toString()))
+            cp.stdout.on('data', (data) => console.log(`ycm stdout: ${data}`))
+            cp.stderr.on('data', (data) => console.error(`ycm stderr: ${data}`))
             cp.on('error', (err) => {
                 console.error(err)
             })
@@ -131,13 +135,23 @@ export default class Ycm{
     }
 
     private static Instance: Ycm
+    private static Initializing = false
     public static async getInstance(workingDir: string, settings: Settings): Promise<Ycm> {
-        if (!Ycm.Instance || 
-            Ycm.Instance.workingDir !== workingDir || 
-            !_.isEqual(Ycm.Instance.settings, settings) ||
-            !Ycm.Instance.process) {
+        workingDir = workingDir.replace(/\\/g, '/')
+        if (process.platform == 'win32') workingDir = workingDir[0].toUpperCase() + workingDir.substr(1)
+        if (Ycm.Initializing) return new Promise<Ycm>((resolve, reject) => {
+            setTimeout(() => resolve(Ycm.getInstance(workingDir, settings)), 50)
+        })
+        if (!Ycm.Instance || Ycm.Instance.workingDir !== workingDir || !_.isEqual(Ycm.Instance.settings, settings) || !Ycm.Instance.process) {
+            console.log(`getInstance: ycm is restarting`)
             if (!!Ycm.Instance) Ycm.Instance.reset()
-            Ycm.Instance = await Ycm.start(workingDir, settings)
+            try {
+                Ycm.Initializing = true
+                Ycm.Instance = await Ycm.start(workingDir, settings)
+            } catch (err) {
+                console.error(err)
+            }
+            Ycm.Initializing = false
         }
         return Ycm.Instance
     }
@@ -209,7 +223,7 @@ export default class Ycm{
             method: method,
             headers: {},
             gzip: false,
-            timeout: 5000
+            // timeout: 5000
         }
         const path = url.resolve('/', endpoint)
         if (method === 'GET') message.qs = params
@@ -224,22 +238,32 @@ export default class Ycm{
         return JSON.parse(response)
     }
 
-    private buildRequest(document: TextDocument): RequestType
-    private buildRequest(document: TextDocument, position: Position): RequestType
-    private buildRequest(document: TextDocument, position: Position, event: string): RequestEventType
-    private buildRequest(document: TextDocument, position: Position = null, event: string = null) {
-        console.log(`buildRequest: document, ${document}; position: ${position}`)
+    private static crossPlatformUri(uri: string) {
+        let ret = Uri.parse(uri).fsPath.replace(/\\/g, '/')
+        if (process.platform === 'win32') ret = ret[0].toUpperCase() + ret.substr(1)
+        return ret
+    }
+
+    private buildRequest(document: TextDocument, position: Position, documents: TextDocuments): RequestType
+    private buildRequest(document: TextDocument, position: Position, documents: TextDocuments, event: string): RequestEventType
+    private buildRequest(document: TextDocument, position: Position = null, documents: TextDocuments = null, event: string = null) {
+        const url = Ycm.crossPlatformUri(document.uri)
+        // const url = document.uri
+        console.log(`buildRequest: document, ${url}; position: ${position}; event: ${event}`)
         const params: RequestType = {
-            filepath: document.uri,
+            filepath: url,
             working_dir: this.workingDir,
-            force_semantic: true,
             file_data: {
             }
         }
-        params.file_data[document.uri] = {
-            contents: document.getText(),
-            filetypes: [document.languageId]
-        }
+        documents.all().forEach(it => {
+            const url = Ycm.crossPlatformUri(it.uri)
+            params.file_data[url] = {
+                contents: document.getText(),
+                filetypes: [document.languageId]
+            }
+        })
+        
         if (position != null) {
             params.line_num = position.line + 1
             params.column_num = position.character + 1
@@ -253,11 +277,19 @@ export default class Ycm{
                 event_name: event
             })
         }
+        console.log(`buildRequest: ${JSON.stringify(params)}`)
         return params
     }
 
-    public async completion(document: TextDocument, position: Position): Promise<CompletionItem[]> {
-        const params = this.buildRequest(document, position)
+    public async getReady(document: TextDocument, documents: TextDocuments) {
+        const params = this.buildRequest(document, null, documents, 'BufferVisit')
+        const response = await this.request('POST', 'event_notification', params)
+        console.log(`getReady: ${JSON.stringify(response)}`)
+        this.ready = true
+    }
+
+    public async completion(document: TextDocument, position: Position, documents: TextDocuments): Promise<CompletionItem[]> {
+        const params = this.buildRequest(document, position, documents)
         const response = await this.request('POST', 'completions', params)
         const completions = response['completions'] as YcmCompletionItem[]
         const res = mapYcmCompletionsToLanguageServerCompletions(completions)
@@ -265,13 +297,28 @@ export default class Ycm{
         return res
     }
 
-    public async readyToParse(document: TextDocument): Promise<Diagnostic[]> {
-        const params = this.buildRequest(document, null, 'FileReadyToParse')
+    public async readyToParse(document: TextDocument, documents: TextDocuments): Promise<Diagnostic[]> {
+        const params = this.buildRequest(document, null, documents, 'FileReadyToParse')
         const response = await this.request('POST', 'event_notification', params)
         if (!_.isArray(response)) return []
+        console.log(`readyToParse: ycm responsed ${response.length} items`)
         const issues = response as YcmDiagnosticItem[]
         return mapYcmDiagnosticToLanguageServerDiagnostic(issues.filter(it => it.location.filepath === document.uri))
             .filter(it => !!it.range)
+    }
+
+    public async currentIdentifierFinished(document: TextDocument, documents: TextDocuments) {
+        const params = this.buildRequest(document, null, documents, 'CurrentIdentifierFinished')
+        const response = await this.request('POST', 'event_notification', params)
+        console.log(`currentIdentifierFinished: ${JSON.stringify(response)}`)
+        return
+    }
+
+    public async insertLeave(document: TextDocument, documents: TextDocuments) {
+        const params = this.buildRequest(document, null, documents, 'InsertLeave')
+        const response = await this.request('POST', 'event_notification', params)
+        console.log(`InsertLeave: ${JSON.stringify(response)}`)
+        return
     }
 }
 
@@ -280,7 +327,7 @@ type RequestType = {
     working_dir: string,
     line_num?: number,
     column_num?: number,
-    force_semantic: boolean
+    force_semantic?: boolean
     file_data: {
         [key: string]: {
             contents: string,

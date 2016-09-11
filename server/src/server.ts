@@ -46,26 +46,31 @@ connection.onInitialize((params): InitializeResult => {
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-documents.onDidChangeContent((change) => {
+documents.onDidChangeContent(async (change) => {
     console.log(`onDidChangeContent ${JSON.stringify(change.document.uri)}`)
-    Ycm.getInstance(workspaceRoot, workspaceConfiguration)
-    .then(ycm => {
-        return ycm.readyToParse(change.document)
-    }).then(it => {
-        console.log(`readyToParse: ${JSON.stringify(it)}`)
-        connection.sendDiagnostics({
-            uri: change.document.uri,
-            diagnostics: it
-        })
+    const ycm = await getYcm()
+    connection.sendDiagnostics({
+        uri: change.document.uri,
+        diagnostics: await ycm.readyToParse(change.document, documents)
     })
+    await ycm.insertLeave(change.document, documents)
+    await ycm.currentIdentifierFinished(change.document, documents)
 	// validateTextDocument(change.document)
 })
 
 // The settings interface describe the server relevant settings part
 
-function getYcm() {
+function getYcm(): Promise<Ycm> {
+    console.log(`getYcm: ${workspaceRoot}, config: ${JSON.stringify(workspaceConfiguration)}`)
+    if (workspaceRoot == null || workspaceConfiguration == null)
+        return new Promise<Ycm>((resolve, reject) => setTimeout(() => getYcm(), 100))
     return Ycm.getInstance(workspaceRoot, workspaceConfiguration)
 }
+
+connection.onSignatureHelp((event) => {
+    console.log(`onSignatureHelp: ${JSON.stringify(event)}`)
+    return null
+})
 
 
 // The settings have changed. Is send on server activation
@@ -93,6 +98,8 @@ function ensureValidConfiguration(settings: Settings) {
 
 documents.onDidOpen(async (event) => {
     console.log(`onDidOpen: ${event.document.uri}`)
+    const ycm = await getYcm()
+    await ycm.getReady(event.document, documents)
 })
 
 // function validateTextDocument(textDocument: TextDocument): void {
@@ -128,7 +135,7 @@ documents.onDidOpen(async (event) => {
 connection.onCompletion(async (textDocumentPosition: TextDocumentPositionParams): Promise<CompletionItem[]> => {
     console.log(`onCompletion: ${textDocumentPosition.textDocument.uri}`)
     const ycm = await getYcm()
-    const latestCompletions = await ycm.completion(documents.get(textDocumentPosition.textDocument.uri), textDocumentPosition.position)
+    const latestCompletions = await ycm.completion(documents.get(textDocumentPosition.textDocument.uri), textDocumentPosition.position, documents)
     return latestCompletions
 })
 
@@ -136,6 +143,10 @@ connection.onCompletion(async (textDocumentPosition: TextDocumentPositionParams)
 // the completion list.
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
 	return item
+})
+
+connection.onExit(() => {
+    getYcm().then(ycm => ycm.reset())
 })
 
 // connection.onDidOpenTextDocument((params) => {

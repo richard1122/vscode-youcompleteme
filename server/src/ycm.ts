@@ -9,7 +9,10 @@ import * as http from 'http'
 import * as url from 'url'
 import * as qs from 'querystring'
 import * as rp from 'request-promise'
-import {mapYcmCompletionsToLanguageServerCompletions} from './utils'
+import {
+    mapYcmCompletionsToLanguageServerCompletions,
+    mapYcmDiagnosticToLanguageServerDiagnostic
+} from './utils'
 
 import {
 	IPCMessageReader, IPCMessageWriter,
@@ -195,7 +198,7 @@ export default class Ycm{
             method: method,
             headers: {},
             gzip: false,
-            timeout: 3000
+            timeout: 5000
         }
         const path = url.resolve('/', endpoint)
         if (method === 'GET') message.qs = params
@@ -208,6 +211,7 @@ export default class Ycm{
         }
         console.log(`request: ${JSON.stringify(message)}`)
         const response = await rp(`http://localhost:${this.port}${path}`, message)
+        console.log(response)
         return JSON.parse(response)
     }
 
@@ -228,8 +232,11 @@ export default class Ycm{
             filetypes: [document.languageId]
         }
         if (position != null) {
-            params.line_num = position.line + 1,
+            params.line_num = position.line + 1
             params.column_num = position.character + 1
+        } else {
+            params.line_num = 1
+            params.column_num = 1
         }
 
         if (event != null) {
@@ -249,9 +256,13 @@ export default class Ycm{
         return res
     }
 
-    public async readyToParse(document: TextDocument) {
+    public async readyToParse(document: TextDocument): Promise<Diagnostic[]> {
         const params = this.buildRequest(document, null, 'FileReadyToParse')
         const response = await this.request('POST', 'event_notification', params)
+        if (!_.isArray(response)) return []
+        const issues = response as YcmDiagnosticItem[]
+        return mapYcmDiagnosticToLanguageServerDiagnostic(issues.filter(it => it.location.filepath === document.uri))
+            .filter(it => !!it.range)
     }
 }
 
@@ -281,9 +292,29 @@ export type YcmCompletionItem = {
     kind: string
 }
 
+export type YcmLocation = {
+    filepath: string,
+    column_num: number,
+    line_num: number
+}
+
+export type YcmRange = {
+    start: YcmLocation
+    end: YcmLocation
+}
+
+export type YcmDiagnosticItem = {
+    kind: "ERROR" | "WARNING"
+    text: string
+    ranges: YcmRange[]
+    location: YcmLocation
+    location_extent: YcmRange
+    fixit_available: boolean
+}
+
 export interface Settings {
 	ycmd: {
-        path: string,
+        path: string
         global_extra_config: string
     }
 }

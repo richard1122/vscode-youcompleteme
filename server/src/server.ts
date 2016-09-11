@@ -48,6 +48,14 @@ connection.onInitialize((params): InitializeResult => {
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent((change) => {
     console.log(`onDidChangeContent ${JSON.stringify(change.document.uri)}`)
+    ycm.readyToParse(change.document)
+    .then(it => {
+        console.log(`readyToParse: ${JSON.stringify(it)}`)
+        connection.sendDiagnostics({
+            uri: change.document.uri,
+            diagnostics: it
+        })
+    })
 	// validateTextDocument(change.document)
 })
 
@@ -82,7 +90,6 @@ function ensureValidConfiguration(settings: Settings) {
 
 documents.onDidOpen(async (event) => {
     console.log(`onDidOpen: ${event.document.uri}`)
-    await ycm.readyToParse(event.document)
 })
 
 // function validateTextDocument(textDocument: TextDocument): void {

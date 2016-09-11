@@ -1,4 +1,4 @@
-import {YcmCompletionItem} from './ycm'
+import {YcmCompletionItem, YcmDiagnosticItem} from './ycm'
 import {
 	IPCMessageReader, IPCMessageWriter,
 	createConnection, IConnection, TextDocumentSyncKind,
@@ -30,6 +30,32 @@ export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: Yc
             case 'CLASS': item.kind = CompletionItemKind.Class; break;
             case '[File]', '[Dir]', '[File&Dir]': item.kind = CompletionItemKind.File; break;
             default: item.kind = CompletionItemKind.Text; break;
+        }
+        return item
+    })
+}
+
+export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticItem[]): Diagnostic[] {
+    return _.map(items, (it, index) => {
+        const item = {
+            range: null,
+            severity: it.kind === 'ERROR' ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning,
+            source: 'ycm',
+            message: it.text
+        } as Diagnostic
+
+        let range = it.location_extent
+        if (!(range.start.line_num > 0 && range.end.line_num > 0))
+            range = it.ranges.length > 0 ? it.ranges[0] : null
+        if (!!range) item.range = {
+            start: {
+                line: range.start.line_num - 1,
+                character: range.start.column_num - 1
+            },
+            end: {
+                line: range.end.line_num - 1,
+                character: range.end.column_num - 1
+            }
         }
         return item
     })

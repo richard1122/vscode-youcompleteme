@@ -36,6 +36,11 @@
             "enum": [
                 "cpp", "c", "Objective-c", "python", "csharp", "go", "typescript", "javascript"
             ]
+        },
+        "ycmd.python": {
+            "type": "string",
+            "default": "python",
+            "description": "python execuable path"
         }
       }
     }

@@ -13,7 +13,8 @@ import Uri from 'vscode-uri'
 
 import {
     mapYcmCompletionsToLanguageServerCompletions,
-    mapYcmDiagnosticToLanguageServerDiagnostic
+    mapYcmDiagnosticToLanguageServerDiagnostic,
+    crossPlatformBufferToString
 } from './utils'
 
 import {
@@ -81,24 +82,30 @@ export default class Ycm{
 
     private _start(optionsFile): Promise<childProcess.ChildProcess> {
         return new Promise<childProcess.ChildProcess>((resolve, reject) => {
-            let cmd = 'python'
-            const args = [
+            let cmd = this.settings.ycmd.python
+            let args = [
                 path.resolve(this.settings.ycmd.path, 'ycmd'),
                 `--port=${this.port}`,
                 `--options_file=${optionsFile}`,
                 `--idle_suicide_seconds=600`
             ]
             if (process.platform === 'win32') {
-                args.unshift('/s', '/c', `${cmd}`)
+                args = args.map(it => `"${it.replace(/"/g, '\\"')}"`)
+                cmd = `"${cmd.replace(/"/g, '\\"')}"`
+                args.unshift(cmd)
+                args = ['/s', '/d', '/c', `"${args.join(' ')}"`]
                 cmd = 'cmd.exe'
             }
 
-            const cp = childProcess.spawn(cmd, args, {
+            const options = {
+                windowsVerbatimArguments: true,
                 cwd: this.workingDir
-            })
+            }
+            console.log(args)
+            const cp = childProcess.spawn(cmd, args, options)
             console.log(`process spawn success ${cp.pid}`)
-            cp.stdout.on('data', (data) => console.log(`ycm stdout: ${data}`))
-            cp.stderr.on('data', (data) => console.error(`ycm stderr: ${data}`))
+            cp.stdout.on('data', (data: Buffer) => console.log(`ycm stdout: ${crossPlatformBufferToString(data)}`))
+            cp.stderr.on('data', (data: Buffer) => console.error(`ycm stderr: ${crossPlatformBufferToString(data)}`))
             cp.on('error', (err) => {
                 console.error(err)
             })
@@ -137,8 +144,6 @@ export default class Ycm{
     private static Instance: Ycm
     private static Initializing = false
     public static async getInstance(workingDir: string, settings: Settings): Promise<Ycm> {
-        workingDir = workingDir.replace(/\\/g, '/')
-        if (process.platform == 'win32') workingDir = workingDir[0].toUpperCase() + workingDir.substr(1)
         if (Ycm.Initializing) return new Promise<Ycm>((resolve, reject) => {
             setTimeout(() => resolve(Ycm.getInstance(workingDir, settings)), 50)
         })
@@ -239,9 +244,7 @@ export default class Ycm{
     }
 
     private static crossPlatformUri(uri: string) {
-        let ret = Uri.parse(uri).fsPath.replace(/\\/g, '/')
-        if (process.platform === 'win32') ret = ret[0].toUpperCase() + ret.substr(1)
-        return ret
+        return Uri.parse(uri).fsPath
     }
 
     private buildRequest(document: TextDocument, position: Position, documents: TextDocuments): RequestType
@@ -302,8 +305,10 @@ export default class Ycm{
         const response = await this.request('POST', 'event_notification', params)
         if (!_.isArray(response)) return []
         console.log(`readyToParse: ycm responsed ${response.length} items`)
+        console.log(JSON.stringify(response))
         const issues = response as YcmDiagnosticItem[]
-        return mapYcmDiagnosticToLanguageServerDiagnostic(issues.filter(it => it.location.filepath === document.uri))
+        const uri = Ycm.crossPlatformUri(document.uri)
+        return mapYcmDiagnosticToLanguageServerDiagnostic(issues.filter(it => it.location.filepath === uri))
             .filter(it => !!it.range)
     }
 
@@ -371,6 +376,7 @@ export type YcmDiagnosticItem = {
 export interface Settings {
 	ycmd: {
         path: string
-        global_extra_config: string
+        global_extra_config: string,
+        python: string
     }
 }

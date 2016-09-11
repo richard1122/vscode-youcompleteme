@@ -7,6 +7,8 @@ import {
 	CompletionItem, CompletionItemKind, Position
 } from 'vscode-languageserver'
 import * as _ from 'lodash'
+import * as Buffer from 'buffer'
+const iconv = require('iconv-lite')
 
 export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: YcmCompletionItem[] = []): CompletionItem[] {
     const len = CompletionItems.length.toString().length
@@ -56,6 +58,18 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticI
                 character: range.end.column_num - 1
             }
         }
+        if (!item.range && it.location.column_num > 0 && it.location.line_num > 0) {
+            item.range = {
+                start: {
+                    line: it.location.line_num - 1,
+                    character: it.location.column_num - 1
+                },
+                end: {
+                    line: it.location.line_num - 1,
+                    character: it.location.column_num - 1
+                }
+            }
+        }
 
         //FIXME: is there any other kind?
         switch (it.kind) {
@@ -65,4 +79,9 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticI
         }
         return item
     })
+}
+
+export function crossPlatformBufferToString(buffer: Buffer): string {
+    if (process.platform === 'win32') return iconv.decode(buffer, 'gbk')
+    return buffer.toString('utf8')
 }

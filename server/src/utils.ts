@@ -39,7 +39,6 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticI
     return _.map(items, (it, index) => {
         const item = {
             range: null,
-            severity: it.kind === 'ERROR' ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning,
             source: 'ycm',
             message: it.text
         } as Diagnostic
@@ -56,6 +55,13 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticI
                 line: range.end.line_num - 1,
                 character: range.end.column_num - 1
             }
+        }
+
+        //FIXME: is there any other kind?
+        switch (it.kind) {
+            case 'ERROR': item.severity = DiagnosticSeverity.Error; break;
+            case 'WARNING': item.severity = DiagnosticSeverity.Warning; break;
+            default: item.severity = DiagnosticSeverity.Information; break;
         }
         return item
     })

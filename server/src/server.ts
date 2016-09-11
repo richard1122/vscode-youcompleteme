@@ -27,7 +27,7 @@ documents.listen(connection)
 // After the server has started the client sends an initilize request. The server receives
 // in the passed params the rootPath of the workspace plus the client capabilites. 
 let workspaceRoot: string
-let ycm: Ycm
+let workspaceConfiguration: Settings;
 
 connection.onInitialize((params): InitializeResult => {
 	workspaceRoot = params.rootPath
@@ -48,8 +48,10 @@ connection.onInitialize((params): InitializeResult => {
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent((change) => {
     console.log(`onDidChangeContent ${JSON.stringify(change.document.uri)}`)
-    ycm.readyToParse(change.document)
-    .then(it => {
+    Ycm.getInstance(workspaceRoot, workspaceConfiguration)
+    .then(ycm => {
+        return ycm.readyToParse(change.document)
+    }).then(it => {
         console.log(`readyToParse: ${JSON.stringify(it)}`)
         connection.sendDiagnostics({
             uri: change.document.uri,
@@ -61,8 +63,10 @@ documents.onDidChangeContent((change) => {
 
 // The settings interface describe the server relevant settings part
 
+function getYcm() {
+    return Ycm.getInstance(workspaceRoot, workspaceConfiguration)
+}
 
-let workspaceConfiguration: Settings;
 
 // The settings have changed. Is send on server activation
 // as well.
@@ -77,8 +81,7 @@ connection.onDidChangeConfiguration(async (change) => {
     }
     workspaceConfiguration = settings
     console.log(`onDidChangeConfiguration: ${workspaceConfiguration}`)
-    if (!!ycm) ycm.reset()
-    ycm = await Ycm.start(workspaceRoot, workspaceConfiguration)
+    await getYcm()
 	// Revalidate any open text documents
 	// documents.all().forEach(validateTextDocument)
 })
@@ -124,6 +127,7 @@ documents.onDidOpen(async (event) => {
 // This handler provides the initial list of the completion items.
 connection.onCompletion(async (textDocumentPosition: TextDocumentPositionParams): Promise<CompletionItem[]> => {
     console.log(`onCompletion: ${textDocumentPosition.textDocument.uri}`)
+    const ycm = await getYcm()
     const latestCompletions = await ycm.completion(documents.get(textDocumentPosition.textDocument.uri), textDocumentPosition.position)
     return latestCompletions
 })

@@ -113,7 +113,7 @@ export default class Ycm{
         })
     }
 
-    public static async start(workingDir: string, settings: Settings): Promise<Ycm> {
+    private static async start(workingDir: string, settings: Settings): Promise<Ycm> {
         try {
             const ycm = new Ycm(settings)
             ycm.workingDir = workingDir
@@ -128,6 +128,18 @@ export default class Ycm{
             console.error(err)
             return null
         }
+    }
+
+    private static Instance: Ycm
+    public static async getInstance(workingDir: string, settings: Settings): Promise<Ycm> {
+        if (!Ycm.Instance || 
+            Ycm.Instance.workingDir !== workingDir || 
+            !_.isEqual(Ycm.Instance.settings, settings) ||
+            !Ycm.Instance.process) {
+            if (!!Ycm.Instance) Ycm.Instance.reset()
+            Ycm.Instance = await Ycm.start(workingDir, settings)
+        }
+        return Ycm.Instance
     }
 
     public async reset() {
@@ -178,7 +190,6 @@ export default class Ycm{
             this.generateHmac(path),
             this.generateHmac(payload)]), 'base64')
         message.headers['X-Ycm-Hmac'] = hmac
-        console.log(`signMessage ${hmac}, ${[message.method, path, payload].join('')}`) 
     }
 
     private escapeUnicode(string: string) {
@@ -209,9 +220,7 @@ export default class Ycm{
             message.headers['Content-Length'] = payload.length
             message.body = payload
         }
-        console.log(`request: ${JSON.stringify(message)}`)
         const response = await rp(`http://localhost:${this.port}${path}`, message)
-        console.log(response)
         return JSON.parse(response)
     }
 

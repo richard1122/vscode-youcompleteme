@@ -11,6 +11,7 @@
     "iconv-lite": "^0.4.13",
     "lodash": "^4.15.0",
     "request": "^2.74.0",
+    "request-promise": "^4.1.1",
     "vscode-languageserver": "2.4.0-next.11",
     "vscode-uri": "0.0.6"
   },

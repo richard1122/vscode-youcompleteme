@@ -9,9 +9,11 @@
 ## Previews
 
 completion
+
 ![completion](arts/completion.gif)
 
 lint
+
 ![completion](arts/lint.gif)
 
 ## Features

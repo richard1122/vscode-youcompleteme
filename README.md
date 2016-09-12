@@ -24,11 +24,12 @@ getType
 
 * Semantic code completion with Ycmd backend
 * Diagonostic display
-* getType by hover
+* getType with hover
+* goToDefinition with ctrl+click
 
 ## Keymaps
 
-* <kbd>alt</kbd>+<kbd>l<kbd> diagonostic
+* <kbd>alt</kbd>+<kbd>l</kbd> diagonostic
 
 ## Usage
 

@@ -66,7 +66,11 @@ function getYcm(): Promise<Ycm> {
     logger(`getYcm: ${workspaceRoot}, config: ${JSON.stringify(workspaceConfiguration)}`)
     if (workspaceRoot == null || workspaceConfiguration == null)
         return new Promise<Ycm>((resolve, reject) => setTimeout(() => getYcm(), 100))
-    return Ycm.getInstance(workspaceRoot, workspaceConfiguration)
+    try {
+        return Ycm.getInstance(workspaceRoot, workspaceConfiguration)
+    } catch (err) {
+        connection.window.showWarningMessage('Ycm startup failed. Please check your ycmd path or python execuable path.')
+    }
 }
 
 async function getIssues(document: TextDocument) {

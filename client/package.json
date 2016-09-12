@@ -1,6 +1,6 @@
 {
-  "name": "ycm-vscode-client",
-  "description": "ycm language server client for vscode",
+  "name": "you-complete-me",
+  "description": "YouCompleteMe for vscode",
   "author": "Richard He",
   "license": "MIT",
   "version": "0.0.1",

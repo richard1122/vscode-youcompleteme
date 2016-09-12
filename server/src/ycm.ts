@@ -14,7 +14,8 @@ import Uri from 'vscode-uri'
 import {
     mapYcmCompletionsToLanguageServerCompletions,
     mapYcmDiagnosticToLanguageServerDiagnostic,
-    crossPlatformBufferToString
+    crossPlatformBufferToString,
+    logger
 } from './utils'
 
 import {
@@ -71,7 +72,7 @@ export default class Ycm{
         options.extra_conf_globlist = []
         options.rustSrcPath = ''
         const optionsFile = path.resolve(os.tmpdir(), `VSCodeYcmOptions-${Date.now()}`)
-        console.log(`processData: ${JSON.stringify(options)}`)
+        logger(`processData: ${JSON.stringify(options)}`)
         return new Promise<string>((resolve, reject) => {
             fs.writeFile(optionsFile, JSON.stringify(options), {encoding: 'utf8'}, (err) => {
                 if (err) reject(err)
@@ -102,16 +103,16 @@ export default class Ycm{
                 cwd: this.workingDir,
                 env: process.env
             }
-            console.log(args)
+            logger('_start', args)
             const cp = childProcess.spawn(cmd, args, options)
-            console.log(`process spawn success ${cp.pid}`)
-            cp.stdout.on('data', (data: Buffer) => console.log(`ycm stdout: ${crossPlatformBufferToString(data)}`))
-            cp.stderr.on('data', (data: Buffer) => console.error(`ycm stderr: ${crossPlatformBufferToString(data)}`))
+            logger('_start', `process spawn success ${cp.pid}`)
+            cp.stdout.on('data', (data: Buffer) => logger(`ycm stdout`,crossPlatformBufferToString(data)))
+            cp.stderr.on('data', (data: Buffer) => logger(`ycm stderr`, crossPlatformBufferToString(data)))
             cp.on('error', (err) => {
-                console.error(err)
+                logger('_start error', err)
             })
             cp.on('exit', (code) => {
-                console.warn(`process closed: ${code}`)
+                logger('_start exit', code)
                 this.process = null
                 switch (code) {
                     case 3: reject(new Error('Unexpected error while loading the YCM core library.'))
@@ -130,14 +131,14 @@ export default class Ycm{
             const ycm = new Ycm(settings)
             ycm.workingDir = workingDir
             const data = await Promise.all<any>([ycm.findUnusedPort(), ycm.generateRandomSecret(), ycm.readDefaultOptions()]) as [number, Buffer, any]
-            console.log(`data: ${data}`)
+            logger('start',`data: ${data}`)
             const optionsFile = await ycm.processData(data)
-            console.log(`optionsFile: ${optionsFile}`)
+            logger('start', `optionsFile: ${optionsFile}`)
             ycm.process = await ycm._start(optionsFile)
-            console.log(`ycm started: ${ycm.process.pid}`)
+            logger('start', `ycm started: ${ycm.process.pid}`)
             return ycm
         } catch(err) {
-            console.error(err)
+            logger('start error', err)
             return null
         }
     }
@@ -149,13 +150,13 @@ export default class Ycm{
             setTimeout(() => resolve(Ycm.getInstance(workingDir, settings)), 50)
         })
         if (!Ycm.Instance || Ycm.Instance.workingDir !== workingDir || !_.isEqual(Ycm.Instance.settings, settings) || !Ycm.Instance.process) {
-            console.log(`getInstance: ycm is restarting`)
+            logger('getInstance', `ycm is restarting`)
             if (!!Ycm.Instance) Ycm.Instance.reset()
             try {
                 Ycm.Initializing = true
                 Ycm.Instance = await Ycm.start(workingDir, settings)
             } catch (err) {
-                console.error(err)
+                logger('getInstance error', err)
             }
             Ycm.Initializing = false
         }
@@ -178,7 +179,7 @@ export default class Ycm{
             const wmic = childProcess.spawn('wmic', [
                 'process', 'where', `(ParentProcessId=${parentPid})`, 'get', 'processid'
             ])
-            wmic.on('error', (err) => console.error(err))
+            wmic.on('error', (err) => logger('killOnWindows error', err))
             let output = ''
             wmic.stdout.on('data', (data: string) => output += data)
             wmic.stdout.on('close', () => {
@@ -253,7 +254,7 @@ export default class Ycm{
     private buildRequest(document: TextDocument, position: Position = null, documents: TextDocuments = null, event: string = null) {
         const url = Ycm.crossPlatformUri(document.uri)
         // const url = document.uri
-        console.log(`buildRequest: document, ${url}; position: ${position}; event: ${event}`)
+        logger(`buildRequest`, `document, ${url}; position: ${position}; event: ${event}`)
         const params: RequestType = {
             filepath: url,
             working_dir: this.workingDir,
@@ -280,24 +281,24 @@ export default class Ycm{
                 event_name: event
             })
         }
-        console.log(`buildRequest: ${JSON.stringify(params)}`)
+        logger(`buildRequest`, JSON.stringify(params))
         return params
     }
 
     public async getReady(document: TextDocument, documents: TextDocuments) {
         const params = this.buildRequest(document, null, documents, 'BufferVisit')
         const response = await this.request('POST', 'event_notification', params)
-        console.log(`getReady: ${JSON.stringify(response)}`)
+        logger(`getReady`, JSON.stringify(response))
         this.ready = true
     }
 
     public async completion(document: TextDocument, position: Position, documents: TextDocuments): Promise<CompletionItem[]> {
         const params = this.buildRequest(document, position, documents)
         const response = await this.request('POST', 'completions', params)
-        console.log(`completion: ${JSON.stringify(response)}`)
+        logger(`completion`, JSON.stringify(response))
         const completions = response['completions'] as YcmCompletionItem[]
         const res = mapYcmCompletionsToLanguageServerCompletions(completions)
-        console.log(`completion: ycm responsed ${res.length} items`) 
+        logger(`completion`, `ycm responsed ${res.length} items`) 
         return res
     }
 
@@ -306,8 +307,7 @@ export default class Ycm{
             const params = this.buildRequest(document, null, documents, 'FileReadyToParse')
             const response = await this.request('POST', 'event_notification', params)
             if (!_.isArray(response)) return []
-            console.log(`readyToParse: ycm responsed ${response.length} items`)
-            console.log(JSON.stringify(response))
+            logger(`readyToParse` ,`ycm responsed ${response.length} items`)
             const issues = response as YcmDiagnosticItem[]
             const uri = Ycm.crossPlatformUri(document.uri)
             return mapYcmDiagnosticToLanguageServerDiagnostic(issues.filter(it => it.location.filepath === uri))
@@ -320,14 +320,14 @@ export default class Ycm{
     public async currentIdentifierFinished(document: TextDocument, documents: TextDocuments) {
         const params = this.buildRequest(document, null, documents, 'CurrentIdentifierFinished')
         const response = await this.request('POST', 'event_notification', params)
-        console.log(`currentIdentifierFinished: ${JSON.stringify(response)}`)
+        logger(`currentIdentifierFinished`, JSON.stringify(response))
         return
     }
 
     public async insertLeave(document: TextDocument, documents: TextDocuments) {
         const params = this.buildRequest(document, null, documents, 'InsertLeave')
         const response = await this.request('POST', 'event_notification', params)
-        console.log(`InsertLeave: ${JSON.stringify(response)}`)
+        logger(`InsertLeave`, JSON.stringify(response))
         return
     }
 }

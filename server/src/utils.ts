@@ -85,3 +85,9 @@ export function crossPlatformBufferToString(buffer: Buffer): string {
     if (process.platform === 'win32') return iconv.decode(buffer, 'gbk')
     return buffer.toString('utf8')
 }
+
+const isDebug = false
+export function logger(tag: string, ...args: any[]) {
+    args.unshift(`[${tag}]`)
+    if (isDebug) console.log.apply(console, args)
+}

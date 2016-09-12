@@ -13,6 +13,7 @@ import {
 } from 'vscode-languageserver'
 import Ycm, {Settings} from './ycm'
 import * as _ from 'lodash'
+import {logger} from './utils'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process))
@@ -47,7 +48,7 @@ connection.onInitialize((params): InitializeResult => {
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(async (change) => {
-    console.log(`onDidChangeContent ${JSON.stringify(change.document.uri)}`)
+    logger(`onDidChangeContent ${JSON.stringify(change.document.uri)}`)
     const ycm = await getYcm()
     // connection.sendDiagnostics({
     //     uri: change.document.uri,
@@ -62,7 +63,7 @@ documents.onDidChangeContent(async (change) => {
 // The settings interface describe the server relevant settings part
 
 function getYcm(): Promise<Ycm> {
-    console.log(`getYcm: ${workspaceRoot}, config: ${JSON.stringify(workspaceConfiguration)}`)
+    logger(`getYcm: ${workspaceRoot}, config: ${JSON.stringify(workspaceConfiguration)}`)
     if (workspaceRoot == null || workspaceConfiguration == null)
         return new Promise<Ycm>((resolve, reject) => setTimeout(() => getYcm(), 100))
     return Ycm.getInstance(workspaceRoot, workspaceConfiguration)
@@ -77,7 +78,7 @@ async function getIssues(document: TextDocument) {
 }
 
 connection.onSignatureHelp((event) => {
-    console.log(`onSignatureHelp: ${JSON.stringify(event)}`)
+    logger(`onSignatureHelp: ${JSON.stringify(event)}`)
     return null
 })
 
@@ -86,7 +87,7 @@ connection.onSignatureHelp((event) => {
 // as well.
 connection.onDidChangeConfiguration(async (change) => {
 	let settings = <Settings>change.settings
-    console.log(JSON.stringify(settings))
+    logger(JSON.stringify(settings))
     try {
         ensureValidConfiguration(settings)
     } catch(err) {
@@ -94,7 +95,7 @@ connection.onDidChangeConfiguration(async (change) => {
         return
     }
     workspaceConfiguration = settings
-    console.log(`onDidChangeConfiguration: ${workspaceConfiguration}`)
+    logger(`onDidChangeConfiguration: ${workspaceConfiguration}`)
     await getYcm()
 	// Revalidate any open text documents
 	// documents.all().forEach(validateTextDocument)
@@ -108,7 +109,7 @@ function ensureValidConfiguration(settings: Settings) {
 }
 
 documents.onDidOpen(async (event) => {
-    console.log(`onDidOpen: ${event.document.uri}`)
+    logger(`onDidOpen: ${event.document.uri}`)
     const ycm = await getYcm()
     await ycm.getReady(event.document, documents)
 })
@@ -139,12 +140,12 @@ documents.onDidOpen(async (event) => {
 
 // connection.onDidChangeWatchedFiles((change) => {
 // 	// Monitored files have change in VSCode
-// 	connection.console.log('We recevied an file change event')
+// 	connection.logger('We recevied an file change event')
 // })
 
 // This handler provides the initial list of the completion items.
 connection.onCompletion(async (textDocumentPosition: TextDocumentPositionParams): Promise<CompletionItem[]> => {
-    console.log(`onCompletion: ${textDocumentPosition.textDocument.uri}`)
+    logger(`onCompletion: ${textDocumentPosition.textDocument.uri}`)
     const ycm = await getYcm()
     // await ycm.insertLeave(documents.get(textDocumentPosition.textDocument.uri), documents)
     // await ycm.currentIdentifierFinished(documents.get(textDocumentPosition.textDocument.uri), documents)
@@ -174,13 +175,13 @@ connection.onExit(() => {
 // 	// The content of a text document did change in VSCode.
 // 	// params.uri uniquely identifies the document.
 // 	// params.contentChanges describe the content changes to the document.
-// 	connection.console.log(`onDidChangeTextDocument: ${JSON.stringify(params.textDocument.version)}`)
+// 	connection.logger(`onDidChangeTextDocument: ${JSON.stringify(params.textDocument.version)}`)
 // })
 /*
 connection.onDidCloseTextDocument((params) => {
 	// A text document got closed in VSCode.
 	// params.uri uniquely identifies the document.
-	connection.console.log(`${params.uri} closed.`);
+	connection.logger(`${params.uri} closed.`);
 });
 */
 

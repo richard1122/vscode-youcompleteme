@@ -1,6 +1,6 @@
 {
   "name": "ycm-language-server",
-  "description": "Youcompleteme language server implement for vscode",
+  "description": "Youcompleteme language server implemention for vscode",
   "version": "0.0.1",
   "author": "Richard He",
   "license": "MIT",

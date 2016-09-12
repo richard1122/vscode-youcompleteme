@@ -5,6 +5,9 @@
   "license": "MIT",
   "version": "0.0.1",
   "publisher": "vscode",
+  "repository": {
+      "url": ""
+  }
   "engines": {
     "vscode": "^1.4.0"
   },

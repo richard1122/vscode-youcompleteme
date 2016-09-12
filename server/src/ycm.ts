@@ -201,7 +201,7 @@ export default class Ycm{
     }
 
     private async verifyHmac(data: string, hmac: string) {
-        const hmac2 = await this.generateHmac(data)
+        const hmac2 = await this.generateHmac(data, 'base64')
         if (!_.isString(hmac) || !_.isString(hmac2)) return false
         return hmac === hmac2
     }
@@ -231,6 +231,7 @@ export default class Ycm{
             method: method,
             headers: {},
             gzip: false,
+            resolveWithFullResponse: true
             // timeout: 5000
         }
         const path = url.resolve('/', endpoint)
@@ -243,7 +244,8 @@ export default class Ycm{
             message.body = payload
         }
         const response = await rp(`http://localhost:${this.port}${path}`, message)
-        return JSON.parse(response)
+        if (!this.verifyHmac(response.body, response.headers['x-ycm-hmac'])) throw new Error('Hmac check failed')
+        return JSON.parse(response.body)
     }
 
     private buildRequest(document: TextDocument, position: Position, documents: TextDocuments): RequestType

@@ -3,7 +3,7 @@
   "description": "YouCompleteMe for vscode",
   "author": "Richard He",
   "license": "MIT",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "publisher": "RichardHe",
   "repository": {
       "type": "git",

@@ -1,13 +1,33 @@
-# README
-## This is the README for your extension "vscode" 
-You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
+# vscode-youcompleteme
 
-* Split the editor (`Cmd+\` on OSX or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on OSX or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (OSX) to see a list of Markdown snippets
+[YouCompleteMe](https://github.com/Valloric/YouCompleteMe) for vscode.
 
-### For more information
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+[Source](https://github.com/richard1122/vscode-youcompleteme)
 
-** Enjoy!**
+[Issues](https://github.com/richard1122/vscode-youcompleteme/issues)
+
+## Previews
+
+completion
+![completion](arts/completion.gif)
+
+lint
+![completion](arts/lint.gif)
+
+## Features
+
+* Semantic code completion with Ycmd backend
+* Diagonostic display
+
+## Keymaps
+
+* <kbd>alt</kbd>+<kbd>l<kbd> diagonostic
+
+## Usage
+
+* Install from vscode extension marketplace
+* Install Ycmd, see [Ycmd's Readme](https://github.com/Valloric/ycmd#building)
+* Config extension in your user or workspace settings.json
+* * `ycmd.path`: The directory you installed ycmd, like: `C:/Users/YOURNAME/.vim/bundle/YouCompleteMe/third_party/ycmd`
+* * `ycmd.global_extra_config`: see [ycm's Readme](https://github.com/Valloric/YouCompleteMe/blob/master/README.md#the-gycm_global_ycm_extra_conf-option)
+* * `ycmd.python`: Optional, python execuable path.

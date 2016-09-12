@@ -36,10 +36,7 @@
         },
         "ycmd.enabled_languages": {
             "type": "array",
-            "default": ["cpp", "c"],
-            "enum": [
-                "cpp", "c", "Objective-c", "python", "csharp", "go", "typescript", "javascript"
-            ]
+            "default": ["cpp", "c"]
         },
         "ycmd.python": {
             "type": "string",

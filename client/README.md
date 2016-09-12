@@ -16,10 +16,15 @@ lint
 
 ![completion](arts/lint.gif)
 
+getType
+
+![hover](arts/hover.gif)
+
 ## Features
 
 * Semantic code completion with Ycmd backend
 * Diagonostic display
+* getType by hover
 
 ## Keymaps
 

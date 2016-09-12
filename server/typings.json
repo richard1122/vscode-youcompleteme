@@ -4,7 +4,8 @@
     "lodash": "registry:dt/lodash#4.14.0+20160830145422",
     "node": "registry:env/node#6.0.0+20160902022231",
     "request": "registry:dt/request#0.0.0+20160726020908",
-    "request-promise": "registry:dt/request-promise#3.0.0+20160906190103"
+    "request-promise": "registry:dt/request-promise#3.0.0+20160906190103",
+    "promise": "https://raw.githubusercontent.com/Microsoft/vscode-languageserver-node-example/master/server/typings/promise.d.ts"
   },
   "dependencies": {
     "form-data": "registry:npm/form-data#1.0.0+20160812072516"

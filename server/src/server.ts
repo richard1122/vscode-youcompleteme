@@ -46,7 +46,7 @@ connection.onInitialize((params): InitializeResult => {
 	}
 })
 
-connection.onHover(async (event): Hover => {
+connection.onHover(async (event): Promise<Hover> => {
     const ycm = await getYcm()
     return await ycm.getType(documents.get(event.textDocument.uri), event.position, documents)
 })

@@ -1,10 +1,10 @@
-import {YcmCompletionItem, YcmDiagnosticItem, YcmCommandResponse} from './ycm'
+import {YcmCompletionItem, YcmDiagnosticItem, YcmGetTypeResponse, YcmLocation} from './ycm'
 import {
 	IPCMessageReader, IPCMessageWriter,
 	createConnection, IConnection, TextDocumentSyncKind,
 	TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
 	InitializeParams, InitializeResult, TextDocumentPositionParams,
-	CompletionItem, CompletionItemKind, Position, Hover, MarkedString
+	CompletionItem, CompletionItemKind, Position, Hover, MarkedString, Location
 } from 'vscode-languageserver'
 import * as _ from 'lodash'
 import * as Buffer from 'buffer'
@@ -82,7 +82,7 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticI
     })
 }
 
-export function mapYcmTypeToHover(res: YcmCommandResponse, language: string): Hover | null {
+export function mapYcmTypeToHover(res: YcmGetTypeResponse, language: string): Hover | null {
     if (res.message === 'Unknown type') return null
     return {
         contents: {
@@ -90,6 +90,22 @@ export function mapYcmTypeToHover(res: YcmCommandResponse, language: string): Ho
             value: res.message
         } as MarkedString
     } as Hover
+}
+
+export function mapYcmLocationToLocation(location: YcmLocation): Location {
+    return {
+        uri: Uri.file(location.filepath).toString(),
+        range: {
+            start: {
+                line: location.line_num - 1,
+                character: location.column_num - 1
+            },
+            end: {
+                line: location.line_num - 1,
+                character: location.column_num - 1
+            },
+        }
+    } as Location
 }
 
 export function crossPlatformBufferToString(buffer: Buffer): string {
@@ -101,7 +117,9 @@ export function crossPlatformUri(uri: string) {
     return Uri.parse(uri).fsPath
 }
 
-const isDebug = true
+
+
+const isDebug = false
 export function logger(tag: string, ...args: any[]) {
     args.unshift(`[${tag}]`)
     if (isDebug) console.log.apply(console, args)

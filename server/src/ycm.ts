@@ -16,7 +16,8 @@ import {
     crossPlatformBufferToString,
     logger,
     crossPlatformUri,
-    mapYcmTypeToHover
+    mapYcmTypeToHover,
+    mapYcmLocationToLocation
 } from './utils'
 
 import {
@@ -24,7 +25,7 @@ import {
 	createConnection, IConnection, TextDocumentSyncKind,
 	TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
 	InitializeParams, InitializeResult, TextDocumentPositionParams,
-	CompletionItem, CompletionItemKind, Position
+	CompletionItem, CompletionItemKind, Position, Location
 } from 'vscode-languageserver'
 
 export default class Ycm{
@@ -280,7 +281,6 @@ export default class Ycm{
                 event_name: event
             })
         }
-        logger(`buildRequest`, JSON.stringify(params))
         return params
     }
 
@@ -315,13 +315,19 @@ export default class Ycm{
     private async runCompleterCommand(document: TextDocument, position: Position, documents: TextDocuments, command: string) {
         const params = this.buildCommandRequest(document, position, documents, command)
         const response = await this.request('POST', 'run_completer_command', params)
-        return response as YcmCommandResponse
+        return response
     }
 
     public async getType(document: TextDocument, position: Position, documents: TextDocuments) {
-        const type = await this.runCompleterCommand(document, position, documents, 'GetType')
+        const type = await this.runCompleterCommand(document, position, documents, 'GetType') as YcmGetTypeResponse
         logger('getType', JSON.stringify(type))
         return mapYcmTypeToHover(type, document.languageId)
+    }
+
+    public async goToDefinition(document: TextDocument, position: Position, documents: TextDocuments): Location {
+        const definition = await this.runCompleterCommand(document, position, documents, 'GoToDefinition')
+        logger('goToDefinition', JSON.stringify(definition))
+        return mapYcmLocationToLocation(definition as YcmLocation)
     }
 
     public async readyToParse(document: TextDocument, documents: TextDocuments): Promise<Diagnostic[]> {
@@ -397,7 +403,7 @@ export type YcmDiagnosticItem = {
     fixit_available: boolean
 }
 
-export type YcmCommandResponse = {
+export type YcmGetTypeResponse = {
     message: string
 }
 

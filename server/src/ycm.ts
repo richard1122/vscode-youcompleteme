@@ -99,7 +99,8 @@ export default class Ycm{
 
             const options = {
                 windowsVerbatimArguments: true,
-                cwd: this.workingDir
+                cwd: this.workingDir,
+                env: process.env
             }
             console.log(args)
             const cp = childProcess.spawn(cmd, args, options)
@@ -256,8 +257,7 @@ export default class Ycm{
         const params: RequestType = {
             filepath: url,
             working_dir: this.workingDir,
-            file_data: {
-            }
+            file_data: { }
         }
         documents.all().forEach(it => {
             const url = Ycm.crossPlatformUri(it.uri)
@@ -301,15 +301,19 @@ export default class Ycm{
     }
 
     public async readyToParse(document: TextDocument, documents: TextDocuments): Promise<Diagnostic[]> {
-        const params = this.buildRequest(document, null, documents, 'FileReadyToParse')
-        const response = await this.request('POST', 'event_notification', params)
-        if (!_.isArray(response)) return []
-        console.log(`readyToParse: ycm responsed ${response.length} items`)
-        console.log(JSON.stringify(response))
-        const issues = response as YcmDiagnosticItem[]
-        const uri = Ycm.crossPlatformUri(document.uri)
-        return mapYcmDiagnosticToLanguageServerDiagnostic(issues.filter(it => it.location.filepath === uri))
-            .filter(it => !!it.range)
+        try {
+            const params = this.buildRequest(document, null, documents, 'FileReadyToParse')
+            const response = await this.request('POST', 'event_notification', params)
+            if (!_.isArray(response)) return []
+            console.log(`readyToParse: ycm responsed ${response.length} items`)
+            console.log(JSON.stringify(response))
+            const issues = response as YcmDiagnosticItem[]
+            const uri = Ycm.crossPlatformUri(document.uri)
+            return mapYcmDiagnosticToLanguageServerDiagnostic(issues.filter(it => it.location.filepath === uri))
+                .filter(it => !!it.range)
+        } catch (err) {
+            return []
+        }
     }
 
     public async currentIdentifierFinished(document: TextDocument, documents: TextDocuments) {

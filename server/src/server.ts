@@ -49,12 +49,12 @@ connection.onInitialize((params): InitializeResult => {
 documents.onDidChangeContent(async (change) => {
     console.log(`onDidChangeContent ${JSON.stringify(change.document.uri)}`)
     const ycm = await getYcm()
-    connection.sendDiagnostics({
-        uri: change.document.uri,
-        diagnostics: await ycm.readyToParse(change.document, documents)
-    })
-    await ycm.insertLeave(change.document, documents)
-    await ycm.currentIdentifierFinished(change.document, documents)
+    // connection.sendDiagnostics({
+    //     uri: change.document.uri,
+    //     diagnostics: await ycm.readyToParse(change.document, documents)
+    // })
+    ycm.insertLeave(change.document, documents)
+    ycm.currentIdentifierFinished(change.document, documents)
 	// validateTextDocument(change.document)
 })
 
@@ -65,6 +65,14 @@ function getYcm(): Promise<Ycm> {
     if (workspaceRoot == null || workspaceConfiguration == null)
         return new Promise<Ycm>((resolve, reject) => setTimeout(() => getYcm(), 100))
     return Ycm.getInstance(workspaceRoot, workspaceConfiguration)
+}
+
+async function getIssues(document: TextDocument) {
+    const ycm = await getYcm()
+    connection.sendDiagnostics({
+        uri: document.uri,
+        diagnostics: await ycm.readyToParse(document, documents)
+    })
 }
 
 connection.onSignatureHelp((event) => {
@@ -81,7 +89,7 @@ connection.onDidChangeConfiguration(async (change) => {
     try {
         ensureValidConfiguration(settings)
     } catch(err) {
-        connection.sendNotification<string>({method: 'error'}, err.message || err)
+        connection.window.showErrorMessage(`[Ycm] ${err.message || err}`)
         return
     }
     workspaceConfiguration = settings
@@ -94,6 +102,8 @@ connection.onDidChangeConfiguration(async (change) => {
 function ensureValidConfiguration(settings: Settings) {
     if (!settings.ycmd || !settings.ycmd.path)
         throw new Error("Invalid ycm path")
+    if (!settings.ycmd.global_extra_config)
+        throw new Error("Invalid ycm global extra config path")
 }
 
 documents.onDidOpen(async (event) => {
@@ -135,7 +145,12 @@ documents.onDidOpen(async (event) => {
 connection.onCompletion(async (textDocumentPosition: TextDocumentPositionParams): Promise<CompletionItem[]> => {
     console.log(`onCompletion: ${textDocumentPosition.textDocument.uri}`)
     const ycm = await getYcm()
+    // await ycm.insertLeave(documents.get(textDocumentPosition.textDocument.uri), documents)
+    // await ycm.currentIdentifierFinished(documents.get(textDocumentPosition.textDocument.uri), documents)
+    // await ycm.readyToParse(documents.get(textDocumentPosition.textDocument.uri), documents)
     const latestCompletions = await ycm.completion(documents.get(textDocumentPosition.textDocument.uri), textDocumentPosition.position, documents)
+    // I'm not sure where to send FileReadyToParse is the best.
+    await getIssues(documents.get(textDocumentPosition.textDocument.uri))
     return latestCompletions
 })
 

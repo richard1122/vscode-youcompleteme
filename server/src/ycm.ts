@@ -324,7 +324,7 @@ export default class Ycm{
         return mapYcmTypeToHover(type, document.languageId)
     }
 
-    public async goToDefinition(document: TextDocument, position: Position, documents: TextDocuments): Location {
+    public async goToDefinition(document: TextDocument, position: Position, documents: TextDocuments) {
         const definition = await this.runCompleterCommand(document, position, documents, 'GoToDefinition')
         logger('goToDefinition', JSON.stringify(definition))
         return mapYcmLocationToLocation(definition as YcmLocation)

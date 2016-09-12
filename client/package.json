@@ -43,7 +43,19 @@
             "description": "python execuable path"
         }
       }
-    }
+    },
+    "commands": [
+        {
+            "command": "ycm.lint",
+            "title": "Ycm: Lint"
+        }
+    ],
+    "keybindings": [
+        {
+            "command": "ycm.lint",
+            "key": "Alt+l"
+        }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "node ./node_modules/vscode/bin/compile",

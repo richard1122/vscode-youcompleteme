@@ -294,6 +294,7 @@ export default class Ycm{
     public async completion(document: TextDocument, position: Position, documents: TextDocuments): Promise<CompletionItem[]> {
         const params = this.buildRequest(document, position, documents)
         const response = await this.request('POST', 'completions', params)
+        console.log(`completion: ${JSON.stringify(response)}`)
         const completions = response['completions'] as YcmCompletionItem[]
         const res = mapYcmCompletionsToLanguageServerCompletions(completions)
         console.log(`completion: ycm responsed ${res.length} items`) 

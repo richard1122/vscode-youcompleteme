@@ -55,6 +55,7 @@ documents.onDidChangeContent(async (change) => {
     // })
     ycm.insertLeave(change.document, documents)
     ycm.currentIdentifierFinished(change.document, documents)
+    // await getIssues(change.document)
 	// validateTextDocument(change.document)
 })
 
@@ -149,8 +150,6 @@ connection.onCompletion(async (textDocumentPosition: TextDocumentPositionParams)
     // await ycm.currentIdentifierFinished(documents.get(textDocumentPosition.textDocument.uri), documents)
     // await ycm.readyToParse(documents.get(textDocumentPosition.textDocument.uri), documents)
     const latestCompletions = await ycm.completion(documents.get(textDocumentPosition.textDocument.uri), textDocumentPosition.position, documents)
-    // I'm not sure where to send FileReadyToParse is the best.
-    await getIssues(documents.get(textDocumentPosition.textDocument.uri))
     return latestCompletions
 })
 
@@ -184,6 +183,12 @@ connection.onDidCloseTextDocument((params) => {
 	connection.console.log(`${params.uri} closed.`);
 });
 */
+
+connection.onNotification<string>({
+    method: 'lint'
+}, (uri) => {
+    getIssues(documents.get(uri))
+})
 
 // Listen on the connection
 connection.listen()

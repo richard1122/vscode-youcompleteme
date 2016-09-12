@@ -6,7 +6,7 @@
 
 import * as path from 'path';
 
-import { workspace, Disposable, ExtensionContext, window } from 'vscode';
+import { workspace, Disposable, ExtensionContext, window, commands } from 'vscode';
 import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind } from 'vscode-languageclient';
 
 export function activate(context: ExtensionContext) {
@@ -42,7 +42,12 @@ export function activate(context: ExtensionContext) {
     })
 	let disposable = client.start()
 
-	
+	commands.registerCommand("ycm.lint", (args) => {
+        console.log(JSON.stringify(args))
+        client.sendNotification<string>({
+            method: 'lint'
+        }, window.activeTextEditor.document.uri.toString())
+    })
 	// Push the disposable to the context's subscriptions so that the 
 	// client can be deactivated on extension deactivation
 	context.subscriptions.push(disposable)

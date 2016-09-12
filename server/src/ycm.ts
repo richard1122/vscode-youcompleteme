@@ -70,7 +70,6 @@ export default class Ycm{
         this.hmacSecret = hmac
         options.hmac_secret = this.hmacSecret.toString('base64')
         options.global_ycm_extra_conf = this.settings.ycmd.global_extra_config
-        options.confirm_extra_conf = true
         options.extra_conf_globlist = []
         options.rustSrcPath = ''
         const optionsFile = path.resolve(os.tmpdir(), `VSCodeYcmOptions-${Date.now()}`)

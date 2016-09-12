@@ -8,6 +8,7 @@ import {
 } from 'vscode-languageserver'
 import * as _ from 'lodash'
 import * as Buffer from 'buffer'
+import Uri from 'vscode-uri'
 const iconv = require('iconv-lite')
 
 export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: YcmCompletionItem[] = []): CompletionItem[] {
@@ -84,6 +85,10 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticI
 export function crossPlatformBufferToString(buffer: Buffer): string {
     if (process.platform === 'win32') return iconv.decode(buffer, 'gbk')
     return buffer.toString('utf8')
+}
+
+export function crossPlatformUri(uri: string) {
+    return Uri.parse(uri).fsPath
 }
 
 const isDebug = true

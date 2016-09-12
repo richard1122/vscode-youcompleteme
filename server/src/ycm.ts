@@ -9,13 +9,13 @@ import * as http from 'http'
 import * as url from 'url'
 import * as qs from 'querystring'
 import * as rp from 'request-promise'
-import Uri from 'vscode-uri'
 
 import {
     mapYcmCompletionsToLanguageServerCompletions,
     mapYcmDiagnosticToLanguageServerDiagnostic,
     crossPlatformBufferToString,
-    logger
+    logger,
+    crossPlatformUri
 } from './utils'
 
 import {
@@ -245,14 +245,10 @@ export default class Ycm{
         return JSON.parse(response)
     }
 
-    private static crossPlatformUri(uri: string) {
-        return Uri.parse(uri).fsPath
-    }
-
     private buildRequest(document: TextDocument, position: Position, documents: TextDocuments): RequestType
     private buildRequest(document: TextDocument, position: Position, documents: TextDocuments, event: string): RequestEventType
     private buildRequest(document: TextDocument, position: Position = null, documents: TextDocuments = null, event: string = null) {
-        const url = Ycm.crossPlatformUri(document.uri)
+        const url = crossPlatformUri(document.uri)
         // const url = document.uri
         logger(`buildRequest`, `document, ${url}; position: ${position}; event: ${event}`)
         const params: RequestType = {
@@ -261,7 +257,7 @@ export default class Ycm{
             file_data: { }
         }
         documents.all().forEach(it => {
-            const url = Ycm.crossPlatformUri(it.uri)
+            const url = crossPlatformUri(it.uri)
             params.file_data[url] = {
                 contents: document.getText(),
                 filetypes: [document.languageId]
@@ -302,14 +298,18 @@ export default class Ycm{
         return res
     }
 
+    private requestEvent(document: TextDocument, documents: TextDocuments, event: string) {
+        const params = this.buildRequest(document, null, documents, event)
+        return this.request('POST', 'event_notification', params)
+    }
+
     public async readyToParse(document: TextDocument, documents: TextDocuments): Promise<Diagnostic[]> {
         try {
-            const params = this.buildRequest(document, null, documents, 'FileReadyToParse')
-            const response = await this.request('POST', 'event_notification', params)
+            const response = await this.requestEvent(document, documents, 'FileReadyToParse')
             if (!_.isArray(response)) return []
             logger(`readyToParse` ,`ycm responsed ${response.length} items`)
             const issues = response as YcmDiagnosticItem[]
-            const uri = Ycm.crossPlatformUri(document.uri)
+            const uri = crossPlatformUri(document.uri)
             return mapYcmDiagnosticToLanguageServerDiagnostic(issues.filter(it => it.location.filepath === uri))
                 .filter(it => !!it.range)
         } catch (err) {
@@ -318,17 +318,11 @@ export default class Ycm{
     }
 
     public async currentIdentifierFinished(document: TextDocument, documents: TextDocuments) {
-        const params = this.buildRequest(document, null, documents, 'CurrentIdentifierFinished')
-        const response = await this.request('POST', 'event_notification', params)
-        logger(`currentIdentifierFinished`, JSON.stringify(response))
-        return
+        await this.requestEvent(document, documents, 'CurrentIdentifierFinished')
     }
 
     public async insertLeave(document: TextDocument, documents: TextDocuments) {
-        const params = this.buildRequest(document, null, documents, 'InsertLeave')
-        const response = await this.request('POST', 'event_notification', params)
-        logger(`InsertLeave`, JSON.stringify(response))
-        return
+        await this.requestEvent(document, documents, 'InsertLeave')
     }
 }
 

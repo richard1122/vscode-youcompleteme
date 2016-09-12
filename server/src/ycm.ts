@@ -15,7 +15,8 @@ import {
     mapYcmDiagnosticToLanguageServerDiagnostic,
     crossPlatformBufferToString,
     logger,
-    crossPlatformUri
+    crossPlatformUri,
+    mapYcmTypeToHover
 } from './utils'
 
 import {
@@ -281,6 +282,12 @@ export default class Ycm{
         return params
     }
 
+    private buildCommandRequest(document: TextDocument, position: Position, documents: TextDocuments, command: string): RequestCommandType {
+        const params = this.buildRequest(document, position, documents) as RequestCommandType
+        params.command_arguments = [command]
+        return params
+    }
+
     public async getReady(document: TextDocument, documents: TextDocuments) {
         const params = this.buildRequest(document, null, documents, 'BufferVisit')
         const response = await this.request('POST', 'event_notification', params)
@@ -301,6 +308,18 @@ export default class Ycm{
     private requestEvent(document: TextDocument, documents: TextDocuments, event: string) {
         const params = this.buildRequest(document, null, documents, event)
         return this.request('POST', 'event_notification', params)
+    }
+
+    private async runCompleterCommand(document: TextDocument, position: Position, documents: TextDocuments, command: string) {
+        const params = this.buildCommandRequest(document, position, documents, command)
+        const response = await this.request('POST', 'run_completer_command', params)
+        return response as YcmCommandResponse
+    }
+
+    public async getType(document: TextDocument, position: Position, documents: TextDocuments) {
+        const type = await this.runCompleterCommand(document, position, documents, 'GetType')
+        logger('getType', JSON.stringify(type))
+        return mapYcmTypeToHover(type, document.languageId)
     }
 
     public async readyToParse(document: TextDocument, documents: TextDocuments): Promise<Diagnostic[]> {
@@ -344,6 +363,10 @@ type RequestEventType = RequestType & {
     event_name: string
 }
 
+type RequestCommandType = RequestType & {
+    command_arguments: string[]
+}
+
 export type YcmCompletionItem = {
     menu_text: string
     insertion_text: string
@@ -370,6 +393,10 @@ export type YcmDiagnosticItem = {
     location: YcmLocation
     location_extent: YcmRange
     fixit_available: boolean
+}
+
+export type YcmCommandResponse = {
+    message: string
 }
 
 export interface Settings {

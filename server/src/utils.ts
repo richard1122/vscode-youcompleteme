@@ -1,10 +1,10 @@
-import {YcmCompletionItem, YcmDiagnosticItem} from './ycm'
+import {YcmCompletionItem, YcmDiagnosticItem, YcmCommandResponse} from './ycm'
 import {
 	IPCMessageReader, IPCMessageWriter,
 	createConnection, IConnection, TextDocumentSyncKind,
 	TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
 	InitializeParams, InitializeResult, TextDocumentPositionParams,
-	CompletionItem, CompletionItemKind, Position
+	CompletionItem, CompletionItemKind, Position, Hover, MarkedString
 } from 'vscode-languageserver'
 import * as _ from 'lodash'
 import * as Buffer from 'buffer'
@@ -80,6 +80,16 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticI
         }
         return item
     })
+}
+
+export function mapYcmTypeToHover(res: YcmCommandResponse, language: string): Hover | null {
+    if (res.message === 'Unknown type') return null
+    return {
+        contents: {
+            language: language,
+            value: res.message
+        } as MarkedString
+    } as Hover
 }
 
 export function crossPlatformBufferToString(buffer: Buffer): string {

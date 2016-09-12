@@ -9,7 +9,7 @@ import {
 	createConnection, IConnection, TextDocumentSyncKind,
 	TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
 	InitializeParams, InitializeResult, TextDocumentPositionParams,
-	CompletionItem, CompletionItemKind
+	CompletionItem, CompletionItemKind, Hover
 } from 'vscode-languageserver'
 import Ycm, {Settings} from './ycm'
 import * as _ from 'lodash'
@@ -40,9 +40,15 @@ connection.onInitialize((params): InitializeResult => {
 			completionProvider: {
 				resolveProvider: true,
                 triggerCharacters: [".", "->"]
-			}
+			},
+            hoverProvider: true
 		}
 	}
+})
+
+connection.onHover(async (event): Hover => {
+    const ycm = await getYcm()
+    return await ycm.getType(documents.get(event.textDocument.uri), event.position, documents)
 })
 
 // The content of a text document has changed. This event is emitted

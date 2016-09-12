@@ -6,8 +6,9 @@
   "version": "0.0.1",
   "publisher": "vscode",
   "repository": {
-      "url": ""
-  }
+      "type": "git",
+      "url": "https://github.com/richard1122/vscode-youcompleteme"
+  },
   "engines": {
     "vscode": "^1.4.0"
   },

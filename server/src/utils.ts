@@ -86,7 +86,7 @@ export function crossPlatformBufferToString(buffer: Buffer): string {
     return buffer.toString('utf8')
 }
 
-const isDebug = false
+const isDebug = true
 export function logger(tag: string, ...args: any[]) {
     args.unshift(`[${tag}]`)
     if (isDebug) console.log.apply(console, args)

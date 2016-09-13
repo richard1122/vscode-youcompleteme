@@ -42,7 +42,10 @@ connection.onInitialize((params): InitializeResult => {
                 triggerCharacters: ['.', ':', '<', '"', '=', '/', '>', '*', '&']
 			},
             hoverProvider: true,
-            definitionProvider: true
+            definitionProvider: true,
+            signatureHelpProvider: {
+                triggerCharacters: ['(']
+            }
 		}
 	}
 })
@@ -92,8 +95,10 @@ async function getIssues(document: TextDocument) {
     })
 }
 
-connection.onSignatureHelp((event) => {
+connection.onSignatureHelp(async (event) => {
     logger(`onSignatureHelp: ${JSON.stringify(event)}`)
+    const ycm = await getYcm()
+    await ycm.getDocQuick(documents.get(event.textDocument.uri), event.position, documents)
     return null
 })
 

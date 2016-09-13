@@ -287,6 +287,7 @@ export default class Ycm{
     private buildCommandRequest(document: TextDocument, position: Position, documents: TextDocuments, command: string): RequestCommandType {
         const params = this.buildRequest(document, position, documents) as RequestCommandType
         params.command_arguments = [command]
+        params.completer_target = "filetype_default"
         return params
     }
 
@@ -328,6 +329,21 @@ export default class Ycm{
         const definition = await this.runCompleterCommand(document, position, documents, 'GoToDefinition')
         logger('goToDefinition', JSON.stringify(definition))
         return mapYcmLocationToLocation(definition as YcmLocation)
+    }
+
+    public async goToImprecise(document: TextDocument, position: Position, documents: TextDocuments) {
+        const goto = await this.runCompleterCommand(document, position, documents, 'GoToImprecise')
+        logger('goToImprecise', JSON.stringify(goto))
+    }
+
+    public async getDoc(document: TextDocument, position: Position, documents: TextDocuments) {
+        const doc = await this.runCompleterCommand(document, position, documents, 'GetDoc')
+        logger('getDoc', JSON.stringify(doc))
+    }
+
+    public async getDocQuick(document: TextDocument, position: Position, documents: TextDocuments) {
+        const doc = await this.runCompleterCommand(document, position, documents, 'GetDocQuick')
+        logger('getDocQuick', JSON.stringify(doc))
     }
 
     public async readyToParse(document: TextDocument, documents: TextDocuments): Promise<Diagnostic[]> {
@@ -372,7 +388,8 @@ type RequestEventType = RequestType & {
 }
 
 type RequestCommandType = RequestType & {
-    command_arguments: string[]
+    command_arguments: string[],
+    completer_target: "filetype_default"
 }
 
 export type YcmCompletionItem = {

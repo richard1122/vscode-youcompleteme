@@ -38,6 +38,11 @@
             "type": "array",
             "default": ["cpp", "c"]
         },
+        "ycmd.confirm_extra_conf": {
+            "type": "boolean",
+            "default": true,
+            "description": "When this option is set to 1 YCM will ask once per .ycm_extra_conf.py file if it is safe to be loaded. This is to prevent execution of malicious code from a .ycm_extra_conf.py file you didn't write."
+        },
         "ycmd.python": {
             "type": "string",
             "default": "python",

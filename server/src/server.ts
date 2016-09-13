@@ -88,7 +88,7 @@ function getYcm(): Promise<Ycm> {
     if (workspaceRoot == null || workspaceConfiguration == null)
         return new Promise<Ycm>((resolve, reject) => setTimeout(() => getYcm(), 100))
     try {
-        return Ycm.getInstance(workspaceRoot, workspaceConfiguration)
+        return Ycm.getInstance(workspaceRoot, workspaceConfiguration, connection.window)
     } catch (err) {
         connection.window.showWarningMessage('Ycm startup failed. Please check your ycmd path or python execuable path.')
     }

@@ -25,7 +25,8 @@ import {
 	createConnection, IConnection, TextDocumentSyncKind,
 	TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
 	InitializeParams, InitializeResult, TextDocumentPositionParams,
-	CompletionItem, CompletionItemKind, Position, Location
+	CompletionItem, CompletionItemKind, Position, Location, RemoteWindow,
+    MessageActionItem
 } from 'vscode-languageserver'
 
 export default class Ycm{
@@ -33,6 +34,7 @@ export default class Ycm{
     private hmacSecret: Buffer
     private process: childProcess.ChildProcess
     private workingDir: string
+    private window: RemoteWindow
 
     private settings: Settings
 
@@ -69,7 +71,7 @@ export default class Ycm{
         this.hmacSecret = hmac
         options.hmac_secret = this.hmacSecret.toString('base64')
         options.global_ycm_extra_conf = this.settings.ycmd.global_extra_config
-        options.confirm_extra_conf = true
+        options.confirm_extra_conf = this.settings.ycmd.confirm_extra_conf
         options.extra_conf_globlist = []
         options.rustSrcPath = ''
         const optionsFile = path.resolve(os.tmpdir(), `VSCodeYcmOptions-${Date.now()}`)
@@ -127,10 +129,11 @@ export default class Ycm{
         })
     }
 
-    private static async start(workingDir: string, settings: Settings): Promise<Ycm> {
+    private static async start(workingDir: string, settings: Settings, window: RemoteWindow): Promise<Ycm> {
         try {
             const ycm = new Ycm(settings)
             ycm.workingDir = workingDir
+            ycm.window = window
             const data = await Promise.all<any>([ycm.findUnusedPort(), ycm.generateRandomSecret(), ycm.readDefaultOptions()]) as [number, Buffer, any]
             logger('start',`data: ${data}`)
             const optionsFile = await ycm.processData(data)
@@ -146,16 +149,16 @@ export default class Ycm{
 
     private static Instance: Ycm
     private static Initializing = false
-    public static async getInstance(workingDir: string, settings: Settings): Promise<Ycm> {
+    public static async getInstance(workingDir: string, settings: Settings, window: RemoteWindow): Promise<Ycm> {
         if (Ycm.Initializing) return new Promise<Ycm>((resolve, reject) => {
-            setTimeout(() => resolve(Ycm.getInstance(workingDir, settings)), 50)
+            setTimeout(() => resolve(Ycm.getInstance(workingDir, settings, window)), 50)
         })
         if (!Ycm.Instance || Ycm.Instance.workingDir !== workingDir || !_.isEqual(Ycm.Instance.settings, settings) || !Ycm.Instance.process) {
             logger('getInstance', `ycm is restarting`)
             if (!!Ycm.Instance) Ycm.Instance.reset()
             try {
                 Ycm.Initializing = true
-                Ycm.Instance = await Ycm.start(workingDir, settings)
+                Ycm.Instance = await Ycm.start(workingDir, settings, window)
             } catch (err) {
                 logger('getInstance error', err)
             }
@@ -245,8 +248,10 @@ export default class Ycm{
         }
         const response = await rp(`http://localhost:${this.port}${path}`, message)
         if (!this.verifyHmac(response.body, response.headers['x-ycm-hmac'])) throw new Error('Hmac check failed')
+        logger('request', response.body)
         return JSON.parse(response.body)
     }
+
 
     private buildRequest(document: TextDocument, position: Position, documents: TextDocuments): RequestType
     private buildRequest(document: TextDocument, position: Position, documents: TextDocuments, event: string): RequestEventType
@@ -299,11 +304,36 @@ export default class Ycm{
     public async completion(document: TextDocument, position: Position, documents: TextDocuments): Promise<CompletionItem[]> {
         const params = this.buildRequest(document, position, documents)
         const response = await this.request('POST', 'completions', params)
-        logger(`completion`, JSON.stringify(response))
+        this.checkUnknownExtraConf(response, document, position, documents)
         const completions = response['completions'] as YcmCompletionItem[]
         const res = mapYcmCompletionsToLanguageServerCompletions(completions)
         logger(`completion`, `ycm responsed ${res.length} items`) 
         return res
+    }
+
+    
+    private checkUnknownExtraConf(body: any, document: TextDocument, position: Position, documents: TextDocuments) {
+        if (!!body && _.isArray(body.errors) && body.errors.length === 1) {
+            const error = body.errors[0] as YcmError
+            if (error.exception.TYPE === 'UnknownExtraConf') {
+                const unknownConfError = error as YcmExtraConfError
+                const req = {filepath: unknownConfError.exception.extra_conf_file} as RequestType
+                this.window.showInformationMessage<ConfirmExtraConfActionItem>(`[Ycm] Found ${unknownConfError.exception.extra_conf_file}. Load? `, {
+                    title: 'Load',
+                    path: unknownConfError.exception.extra_conf_file
+                }, {
+                    title: 'Ignore',
+                    path: unknownConfError.exception.extra_conf_file
+                }).then(it => {
+                    if (it.title === 'Load') {
+                        this.request('POST', '/load_extra_conf_file', req)
+                    } else {
+                        this.request('POST', '/ignore_extra_conf_file', req)
+                    }
+                })
+                throw new Error('ExtraConfFile question found.')
+            }
+        }
     }
 
     private requestEvent(document: TextDocument, documents: TextDocuments, event: string) {
@@ -398,6 +428,23 @@ export type YcmCompletionItem = {
     kind: string
 }
 
+export type YcmError = {
+    exception: {
+        TYPE: string,
+        traceback: string
+    }
+}
+
+export type YcmExtraConfError = YcmError & {
+    exception: {
+        extra_conf_file: string
+    }
+}
+
+export interface ConfirmExtraConfActionItem extends MessageActionItem {
+    path: string
+}
+
 export type YcmLocation = {
     filepath: string,
     column_num: number,
@@ -426,6 +473,7 @@ export interface Settings {
 	ycmd: {
         path: string
         global_extra_config: string,
-        python: string
+        python: string,
+        confirm_extra_conf: boolean
     }
 }

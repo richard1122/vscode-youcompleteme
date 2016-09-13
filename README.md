@@ -36,11 +36,16 @@ getType
 * Install from vscode extension marketplace
 * Install Ycmd, see [Ycmd's Readme](https://github.com/Valloric/ycmd#building)
 * Config extension in your user or workspace settings.json
-* * `ycmd.path`: The directory you installed ycmd, like: `C:/Users/YOURNAME/.vim/bundle/YouCompleteMe/third_party/ycmd`
-* * `ycmd.global_extra_config`: see [ycm's Readme](https://github.com/Valloric/YouCompleteMe/blob/master/README.md#the-gycm_global_ycm_extra_conf-option)
-* * `ycmd.python`: Optional, python execuable path.
 
-## more languages
+## Configuration
+
+* `ycmd.path`: The directory you installed ycmd, like: `C:/Users/YOURNAME/.vim/bundle/YouCompleteMe/third_party/ycmd`
+* `ycmd.global_extra_config`: see [ycm's Readme](https://github.com/Valloric/YouCompleteMe/blob/master/README.md#the-gycm_global_ycm_extra_conf-option)
+* `ycmd.python`: Optional, python execuable path.
+* `ycmd.confirm_extra_conf`: see [ycm's Readme](https://github.com/Valloric/YouCompleteMe/blob/master/README.md#the-gycm_confirm_extra_conf-option)
+
+
+## More languages
 
 golang
 

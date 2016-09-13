@@ -35,7 +35,6 @@ export default class Ycm{
     private workingDir: string
 
     private settings: Settings
-    private ready = false
 
     private constructor(settings: Settings) {
         this.settings = settings
@@ -295,7 +294,6 @@ export default class Ycm{
         const params = this.buildRequest(document, null, documents, 'BufferVisit')
         const response = await this.request('POST', 'event_notification', params)
         logger(`getReady`, JSON.stringify(response))
-        this.ready = true
     }
 
     public async completion(document: TextDocument, position: Position, documents: TextDocuments): Promise<CompletionItem[]> {

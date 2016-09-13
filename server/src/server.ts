@@ -52,12 +52,20 @@ connection.onInitialize((params): InitializeResult => {
 
 connection.onHover(async (event): Promise<Hover> => {
     const ycm = await getYcm()
-    return await ycm.getType(documents.get(event.textDocument.uri), event.position, documents)
+    try {
+        return await ycm.getType(documents.get(event.textDocument.uri), event.position, documents)
+    } catch (err) {
+        logger(`onHover error`, err)
+    }
 })
 
 connection.onDefinition(async (event) => {
     const ycm = await getYcm()
-    return await ycm.goToDefinition(documents.get(event.textDocument.uri), event.position, documents)
+    try {
+        return await ycm.goToDefinition(documents.get(event.textDocument.uri), event.position, documents)
+    } catch (err) {
+        logger(`onDefinition error`, err)
+    }
 })
 
 // The content of a text document has changed. This event is emitted
@@ -69,7 +77,6 @@ documents.onDidChangeContent(async (change) => {
     //     uri: change.document.uri,
     //     diagnostics: await ycm.readyToParse(change.document, documents)
     // })
-    ycm.insertLeave(change.document, documents)
     ycm.currentIdentifierFinished(change.document, documents)
     // await getIssues(change.document)
 	// validateTextDocument(change.document)
@@ -97,9 +104,13 @@ async function getIssues(document: TextDocument) {
 
 connection.onSignatureHelp(async (event) => {
     logger(`onSignatureHelp: ${JSON.stringify(event)}`)
-    const ycm = await getYcm()
-    await ycm.getDocQuick(documents.get(event.textDocument.uri), event.position, documents)
-    return null
+    try {
+        const ycm = await getYcm()
+        await ycm.getDocQuick(documents.get(event.textDocument.uri), event.position, documents)
+        return null
+    } catch(err) {
+        logger('onSignatureHelp error', err)
+    }
 })
 
 
@@ -107,18 +118,14 @@ connection.onSignatureHelp(async (event) => {
 // as well.
 connection.onDidChangeConfiguration(async (change) => {
 	let settings = <Settings>change.settings
-    logger(JSON.stringify(settings))
+    logger(`onDidChangeConfiguration settings`, JSON.stringify(settings))
     try {
         ensureValidConfiguration(settings)
+        workspaceConfiguration = settings
+        await getYcm()
     } catch(err) {
         connection.window.showErrorMessage(`[Ycm] ${err.message || err}`)
-        return
     }
-    workspaceConfiguration = settings
-    logger(`onDidChangeConfiguration: ${workspaceConfiguration}`)
-    await getYcm()
-	// Revalidate any open text documents
-	// documents.all().forEach(validateTextDocument)
 })
 
 function ensureValidConfiguration(settings: Settings) {
@@ -129,9 +136,13 @@ function ensureValidConfiguration(settings: Settings) {
 }
 
 documents.onDidOpen(async (event) => {
-    logger(`onDidOpen: ${event.document.uri}`)
+    logger(`onDidOpen`, event.document.uri)
     const ycm = await getYcm()
-    await ycm.getReady(event.document, documents)
+    try {
+        await ycm.getReady(event.document, documents)
+    } catch (err) {
+        logger('onDidOpen error', err)
+    }
 })
 
 // function validateTextDocument(textDocument: TextDocument): void {
@@ -170,8 +181,12 @@ connection.onCompletion(async (textDocumentPosition: TextDocumentPositionParams)
     // await ycm.insertLeave(documents.get(textDocumentPosition.textDocument.uri), documents)
     // await ycm.currentIdentifierFinished(documents.get(textDocumentPosition.textDocument.uri), documents)
     // await ycm.readyToParse(documents.get(textDocumentPosition.textDocument.uri), documents)
-    const latestCompletions = await ycm.completion(documents.get(textDocumentPosition.textDocument.uri), textDocumentPosition.position, documents)
-    return latestCompletions
+    try {
+        const latestCompletions = await ycm.completion(documents.get(textDocumentPosition.textDocument.uri), textDocumentPosition.position, documents)
+        return latestCompletions
+    } catch (err) {
+        return null
+    }
 })
 
 // This handler resolve additional information for the item selected in

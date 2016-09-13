@@ -6,8 +6,8 @@
   "version": "1.0.14",
   "publisher": "RichardHe",
   "repository": {
-      "type": "git",
-      "url": "https://github.com/richard1122/vscode-youcompleteme"
+    "type": "git",
+    "url": "https://github.com/richard1122/vscode-youcompleteme"
   },
   "engines": {
     "vscode": "^1.4.0"
@@ -30,45 +30,50 @@
           "description": "The directory containing the `ycmd/default_settings.json` file. Ycmd is required for this extension to work."
         },
         "ycmd.global_extra_config": {
-            "type": "string",
-            "default": null,
-            "description": "The fallback extra config file when no `.ycm_extra_conf.py` is found. Follow https://github.com/Valloric/YouCompleteMe#the-gycm_global_ycm_extra_conf-option for more information."
+          "type": "string",
+          "default": null,
+          "description": "The fallback extra config file when no `.ycm_extra_conf.py` is found. Follow https://github.com/Valloric/YouCompleteMe#the-gycm_global_ycm_extra_conf-option for more information."
         },
         "ycmd.enabled_languages": {
-            "type": "array",
-            "default": ["cpp", "c"]
+          "type": "array",
+          "default": [
+            "cpp",
+            "c"
+          ]
         },
         "ycmd.confirm_extra_conf": {
-            "type": "boolean",
-            "default": true,
-            "description": "When this option is set to 1 YCM will ask once per .ycm_extra_conf.py file if it is safe to be loaded. This is to prevent execution of malicious code from a .ycm_extra_conf.py file you didn't write."
+          "type": "boolean",
+          "default": true,
+          "description": "When this option is set to 1 YCM will ask once per .ycm_extra_conf.py file if it is safe to be loaded. This is to prevent execution of malicious code from a .ycm_extra_conf.py file you didn't write."
         },
         "ycmd.python": {
-            "type": "string",
-            "default": "python",
-            "description": "python execuable path"
+          "type": "string",
+          "default": "python",
+          "description": "python execuable path"
         }
       }
     },
     "commands": [
-        {
-            "command": "ycm.lint",
-            "title": "Ycm: Lint"
-        }
+      {
+        "command": "ycm.lint",
+        "title": "Ycm: Lint"
+      }
     ],
     "keybindings": [
-        {
-            "command": "ycm.lint",
-            "key": "Alt+l"
-        }
+      {
+        "command": "ycm.lint",
+        "key": "Alt+l"
+      }
     ]
   },
   "scripts": {
     "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
     "compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install"
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "lint": "tslint -c ../tslint.json ./src/*.ts"
   },
   "devDependencies": {
+    "tslint": "^3.15.1",
     "typescript": "^2.1.0-dev.20160908",
     "vscode": "^0.11.0"
   },

@@ -1,10 +1,10 @@
 import {YcmCompletionItem, YcmDiagnosticItem, YcmGetTypeResponse, YcmLocation} from './ycm'
 import {
-	IPCMessageReader, IPCMessageWriter,
-	createConnection, IConnection, TextDocumentSyncKind,
-	TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
-	InitializeParams, InitializeResult, TextDocumentPositionParams,
-	CompletionItem, CompletionItemKind, Position, Hover, MarkedString, Location
+    IPCMessageReader, IPCMessageWriter,
+    createConnection, IConnection, TextDocumentSyncKind,
+    TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
+    InitializeParams, InitializeResult, TextDocumentPositionParams,
+    CompletionItem, CompletionItemKind, Position, Hover, MarkedString, Location
 } from 'vscode-languageserver'
 import * as _ from 'lodash'
 import * as Buffer from 'buffer'
@@ -21,18 +21,40 @@ export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: Yc
             documentation: it.detailed_info,
             sortText: _.padStart(index.toString(), len, '0')
         } as CompletionItem
-        switch(it.kind) {
-            case 'TYPE', 'STRUCT': item.kind = CompletionItemKind.Interface; break;
-            case 'ENUM': item.kind = CompletionItemKind.Enum; break;
-            case 'MEMBER': item.kind = CompletionItemKind.Property; break;
-            case 'MACRO': item.kind = CompletionItemKind.Keyword; break;
-            case 'NAMESPACE': item.kind = CompletionItemKind.Module; break;
-            case 'UNKNOWN': item.kind = CompletionItemKind.Value; break;
-            case 'FUNCTION': item.kind = CompletionItemKind.Function; break;
-            case 'VARIABLE': item.kind = CompletionItemKind.Variable; break;
-            case 'CLASS': item.kind = CompletionItemKind.Class; break;
-            case '[File]', '[Dir]', '[File&Dir]': item.kind = CompletionItemKind.File; break;
-            default: item.kind = CompletionItemKind.Text; break;
+        switch (it.kind) {
+            case 'TYPE', 'STRUCT':
+                item.kind = CompletionItemKind.Interface
+                break
+            case 'ENUM':
+                item.kind = CompletionItemKind.Enum
+                break
+            case 'MEMBER':
+                item.kind = CompletionItemKind.Property
+                break
+            case 'MACRO':
+                item.kind = CompletionItemKind.Keyword
+                break
+            case 'NAMESPACE':
+                item.kind = CompletionItemKind.Module
+                break
+            case 'UNKNOWN':
+                item.kind = CompletionItemKind.Value
+                break
+            case 'FUNCTION':
+                item.kind = CompletionItemKind.Function
+                break
+            case 'VARIABLE':
+                item.kind = CompletionItemKind.Variable
+                break
+            case 'CLASS':
+                item.kind = CompletionItemKind.Class
+                break
+            case '[File]', '[Dir]', '[File&Dir]':
+                item.kind = CompletionItemKind.File
+                break
+            default:
+                item.kind = CompletionItemKind.Text
+                break
         }
         return item
     })
@@ -72,11 +94,17 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticI
             }
         }
 
-        //FIXME: is there any other kind?
+        // FIXME: is there any other kind?
         switch (it.kind) {
-            case 'ERROR': item.severity = DiagnosticSeverity.Error; break;
-            case 'WARNING': item.severity = DiagnosticSeverity.Warning; break;
-            default: item.severity = DiagnosticSeverity.Information; break;
+            case 'ERROR':
+                item.severity = DiagnosticSeverity.Error
+                break
+            case 'WARNING':
+                item.severity = DiagnosticSeverity.Warning
+                break
+            default:
+                item.severity = DiagnosticSeverity.Information
+                break
         }
         return item
     })

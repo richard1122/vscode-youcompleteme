@@ -21,15 +21,15 @@ import {
 } from './utils'
 
 import {
-	IPCMessageReader, IPCMessageWriter,
-	createConnection, IConnection, TextDocumentSyncKind,
-	TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
-	InitializeParams, InitializeResult, TextDocumentPositionParams,
-	CompletionItem, CompletionItemKind, Position, Location, RemoteWindow,
+    IPCMessageReader, IPCMessageWriter,
+    createConnection, IConnection, TextDocumentSyncKind,
+    TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
+    InitializeParams, InitializeResult, TextDocumentPositionParams,
+    CompletionItem, CompletionItemKind, Position, Location, RemoteWindow,
     MessageActionItem
 } from 'vscode-languageserver'
 
-export default class Ycm{
+export default class Ycm {
     private port: number
     private hmacSecret: Buffer
     private process: childProcess.ChildProcess
@@ -109,7 +109,7 @@ export default class Ycm{
             logger('_start', args)
             const cp = childProcess.spawn(cmd, args, options)
             logger('_start', `process spawn success ${cp.pid}`)
-            cp.stdout.on('data', (data: Buffer) => logger(`ycm stdout`,crossPlatformBufferToString(data)))
+            cp.stdout.on('data', (data: Buffer) => logger(`ycm stdout`, crossPlatformBufferToString(data)))
             cp.stderr.on('data', (data: Buffer) => logger(`ycm stderr`, crossPlatformBufferToString(data)))
             cp.on('error', (err) => {
                 logger('_start error', err)
@@ -135,13 +135,13 @@ export default class Ycm{
             ycm.workingDir = workingDir
             ycm.window = window
             const data = await Promise.all<any>([ycm.findUnusedPort(), ycm.generateRandomSecret(), ycm.readDefaultOptions()]) as [number, Buffer, any]
-            logger('start',`data: ${data}`)
+            logger('start', `data: ${data}`)
             const optionsFile = await ycm.processData(data)
             logger('start', `optionsFile: ${optionsFile}`)
             ycm.process = await ycm._start(optionsFile)
             logger('start', `ycm started: ${ycm.process.pid}`)
             return ycm
-        } catch(err) {
+        } catch (err) {
             logger('start error', err)
             return null
         }
@@ -168,9 +168,9 @@ export default class Ycm{
     }
 
     public async reset() {
-        if (this.process != null) {
+        if (!!this.process) {
             if (process.platform === 'win32') await this.killOnWindows()
-            //TODO: kill cmd.exe may not kill python
+            // TODO: kill cmd.exe may not kill python
             this.process.kill()
             this.port = null
             this.hmacSecret = null
@@ -190,7 +190,7 @@ export default class Ycm{
                 output.split(/\s+/)
                     .filter(pid => /^\d+$/.test(pid))
                     .map(pid => parseInt(pid))
-                    .filter(pid => pid != parentPid && pid > 0 && pid < Infinity)
+                    .filter(pid => pid !== parentPid && pid > 0 && pid < Infinity)
                     .map(pid => process.kill(pid))
                 resolve()
             })
@@ -199,7 +199,7 @@ export default class Ycm{
 
     private generateHmac(data: string | Buffer): Buffer
     private generateHmac(data: string | Buffer, encoding: string): string
-    private generateHmac(data: string | Buffer, encoding: string = null): Buffer | string{
+    private generateHmac(data: string | Buffer, encoding: string = null): Buffer | string {
         return crypto.createHmac('sha256', this.hmacSecret).update(data).digest(encoding)
     }
 
@@ -217,18 +217,18 @@ export default class Ycm{
         message.headers['X-Ycm-Hmac'] = hmac
     }
 
-    private escapeUnicode(string: string) {
+    private escapeUnicode(str: string) {
         const result: string[] = []
-        for (const i of _.range(string.length)) {
-            const char = string.charAt(i)
-            const charCode = string.charCodeAt(i)
+        for (const i of _.range(str.length)) {
+            const char = str.charAt(i)
+            const charCode = str.charCodeAt(i)
             if (charCode < 0x80) result.push(char)
             else result.push(('\\u' + ('0000' + charCode.toString(16)).substr(-4)))
         }
         return result.join('')
     }
 
-    private async request(method: "POST" | "GET", endpoint: string, params: RequestType = null) {
+    private async request(method: 'POST' | 'GET', endpoint: string, params: RequestType = null) {
         const message: rp.RequestPromiseOptions = {
             port: this.port,
             method: method,
@@ -271,8 +271,8 @@ export default class Ycm{
                 filetypes: [document.languageId]
             }
         })
-        
-        if (position != null) {
+
+        if (!!position) {
             params.line_num = position.line + 1
             params.column_num = position.character + 1
         } else {
@@ -280,7 +280,7 @@ export default class Ycm{
             params.column_num = 1
         }
 
-        if (event != null) {
+        if (!!event) {
             return _.assign(params, {
                 event_name: event
             })
@@ -291,7 +291,7 @@ export default class Ycm{
     private buildCommandRequest(document: TextDocument, position: Position, documents: TextDocuments, command: string): RequestCommandType {
         const params = this.buildRequest(document, position, documents) as RequestCommandType
         params.command_arguments = [command]
-        params.completer_target = "filetype_default"
+        params.completer_target = 'filetype_default'
         return params
     }
 
@@ -307,11 +307,10 @@ export default class Ycm{
         this.checkUnknownExtraConf(response, document, position, documents)
         const completions = response['completions'] as YcmCompletionItem[]
         const res = mapYcmCompletionsToLanguageServerCompletions(completions)
-        logger(`completion`, `ycm responsed ${res.length} items`) 
+        logger(`completion`, `ycm responsed ${res.length} items`)
         return res
     }
 
-    
     private checkUnknownExtraConf(body: any, document: TextDocument, position: Position, documents: TextDocuments) {
         if (!!body && _.isArray(body.errors) && body.errors.length === 1) {
             const error = body.errors[0] as YcmError
@@ -378,7 +377,7 @@ export default class Ycm{
         try {
             const response = await this.requestEvent(document, documents, 'FileReadyToParse')
             if (!_.isArray(response)) return []
-            logger(`readyToParse` ,`ycm responsed ${response.length} items`)
+            logger(`readyToParse`, `ycm responsed ${response.length} items`)
             const issues = response as YcmDiagnosticItem[]
             const uri = crossPlatformUri(document.uri)
             return mapYcmDiagnosticToLanguageServerDiagnostic(issues.filter(it => it.location.filepath === uri))
@@ -417,7 +416,7 @@ type RequestEventType = RequestType & {
 
 type RequestCommandType = RequestType & {
     command_arguments: string[],
-    completer_target: "filetype_default"
+    completer_target: 'filetype_default'
 }
 
 export type YcmCompletionItem = {
@@ -457,7 +456,7 @@ export type YcmRange = {
 }
 
 export type YcmDiagnosticItem = {
-    kind: "ERROR" | "WARNING"
+    kind: 'ERROR' | 'WARNING'
     text: string
     ranges: YcmRange[]
     location: YcmLocation
@@ -470,7 +469,7 @@ export type YcmGetTypeResponse = {
 }
 
 export interface Settings {
-	ycmd: {
+    ycmd: {
         path: string
         global_extra_config: string,
         python: string,

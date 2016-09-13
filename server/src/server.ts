@@ -5,11 +5,11 @@
 'use strict'
 
 import {
-	IPCMessageReader, IPCMessageWriter,
-	createConnection, IConnection, TextDocumentSyncKind,
-	TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
-	InitializeParams, InitializeResult, TextDocumentPositionParams,
-	CompletionItem, CompletionItemKind, Hover
+    IPCMessageReader, IPCMessageWriter,
+    createConnection, IConnection, TextDocumentSyncKind,
+    TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
+    InitializeParams, InitializeResult, TextDocumentPositionParams,
+    CompletionItem, CompletionItemKind, Hover
 } from 'vscode-languageserver'
 import Ycm, {Settings} from './ycm'
 import * as _ from 'lodash'
@@ -28,26 +28,26 @@ documents.listen(connection)
 // After the server has started the client sends an initilize request. The server receives
 // in the passed params the rootPath of the workspace plus the client capabilites. 
 let workspaceRoot: string
-let workspaceConfiguration: Settings;
+let workspaceConfiguration: Settings
 
 connection.onInitialize((params): InitializeResult => {
-	workspaceRoot = params.rootPath
-	return {
-		capabilities: {
-			// Tell the client that the server works in FULL text document sync mode
-			textDocumentSync: documents.syncKind,
-			// Tell the client that the server support code complete
-			completionProvider: {
-				resolveProvider: true,
+    workspaceRoot = params.rootPath
+    return {
+        capabilities: {
+            // Tell the client that the server works in FULL text document sync mode
+            textDocumentSync: documents.syncKind,
+            // Tell the client that the server support code complete
+            completionProvider: {
+                resolveProvider: true,
                 triggerCharacters: ['.', ':', '<', '"', '=', '/', '>', '*', '&']
-			},
+            },
             hoverProvider: true,
             definitionProvider: true,
             signatureHelpProvider: {
                 triggerCharacters: ['(']
             }
-		}
-	}
+        }
+    }
 })
 
 connection.onHover(async (event): Promise<Hover> => {
@@ -79,13 +79,13 @@ documents.onDidChangeContent(async (change) => {
     // })
     ycm.currentIdentifierFinished(change.document, documents)
     // await getIssues(change.document)
-	// validateTextDocument(change.document)
+    // validateTextDocument(change.document)
 })
 
 // The settings interface describe the server relevant settings part
 
 function getYcm(): Promise<Ycm> {
-    if (workspaceRoot == null || workspaceConfiguration == null)
+    if (!workspaceRoot || !workspaceConfiguration)
         return new Promise<Ycm>((resolve, reject) => setTimeout(() => getYcm(), 100))
     try {
         return Ycm.getInstance(workspaceRoot, workspaceConfiguration, connection.window)
@@ -108,7 +108,7 @@ connection.onSignatureHelp(async (event) => {
         const ycm = await getYcm()
         await ycm.getDocQuick(documents.get(event.textDocument.uri), event.position, documents)
         return null
-    } catch(err) {
+    } catch (err) {
         logger('onSignatureHelp error', err)
     }
 })
@@ -117,22 +117,22 @@ connection.onSignatureHelp(async (event) => {
 // The settings have changed. Is send on server activation
 // as well.
 connection.onDidChangeConfiguration(async (change) => {
-	let settings = <Settings>change.settings
+    let settings = <Settings>change.settings
     logger(`onDidChangeConfiguration settings`, JSON.stringify(settings))
     try {
         ensureValidConfiguration(settings)
         workspaceConfiguration = settings
         await getYcm()
-    } catch(err) {
+    } catch (err) {
         connection.window.showErrorMessage(`[Ycm] ${err.message || err}`)
     }
 })
 
 function ensureValidConfiguration(settings: Settings) {
     if (!settings.ycmd || !settings.ycmd.path)
-        throw new Error("Invalid ycm path")
+        throw new Error('Invalid ycm path')
     if (!settings.ycmd.global_extra_config)
-        throw new Error("Invalid ycm global extra config path")
+        throw new Error('Invalid ycm global extra config path')
 }
 
 documents.onDidOpen(async (event) => {
@@ -192,7 +192,7 @@ connection.onCompletion(async (textDocumentPosition: TextDocumentPositionParams)
 // This handler resolve additional information for the item selected in
 // the completion list.
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-	return item
+    return item
 })
 
 connection.onExit(() => {
@@ -214,9 +214,9 @@ connection.onExit(() => {
 // })
 /*
 connection.onDidCloseTextDocument((params) => {
-	// A text document got closed in VSCode.
-	// params.uri uniquely identifies the document.
-	connection.logger(`${params.uri} closed.`);
+    // A text document got closed in VSCode.
+    // params.uri uniquely identifies the document.
+    connection.logger(`${params.uri} closed.`);
 });
 */
 

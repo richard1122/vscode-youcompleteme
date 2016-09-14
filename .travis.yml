@@ -6,5 +6,8 @@ install:
     - cd $TRAVIS_BUILD_DIR/server && npm install && npm run typings
     - npm install -g vsce
 script:
+    - cd $TRAVIS_BUILD_DIR/client && npm run lint
     - cd $TRAVIS_BUILD_DIR/server && npm run compile
     - cd $TRAVIS_BUILD_DIR/client && vsce package
+notification:
+    email: false

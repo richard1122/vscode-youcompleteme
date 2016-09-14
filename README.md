@@ -1,10 +1,14 @@
 # vscode-youcompleteme
 
+[![Build Status](https://travis-ci.org/richard1122/vscode-youcompleteme.svg?branch=master)](https://travis-ci.org/richard1122/vscode-youcompleteme)
+
 [YouCompleteMe](https://github.com/Valloric/YouCompleteMe) for vscode.
 
 [Source](https://github.com/richard1122/vscode-youcompleteme)
 
 [Issues](https://github.com/richard1122/vscode-youcompleteme/issues)
+
+[VSCode extension market](https://marketplace.visualstudio.com/items?itemName=RichardHe.you-complete-me)
 
 ## Previews
 

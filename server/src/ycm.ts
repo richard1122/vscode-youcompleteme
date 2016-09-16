@@ -29,6 +29,8 @@ import {
     MessageActionItem
 } from 'vscode-languageserver'
 
+import YcmRequest from './ycmRequest'
+
 export default class Ycm {
     private port: number
     private hmacSecret: Buffer
@@ -197,189 +199,61 @@ export default class Ycm {
         })
     }
 
-    private generateHmac(data: string | Buffer): Buffer
-    private generateHmac(data: string | Buffer, encoding: string): string
-    private generateHmac(data: string | Buffer, encoding: string = null): Buffer | string {
-        return crypto.createHmac('sha256', this.hmacSecret).update(data).digest(encoding)
+    private buildRequest(currentDocument: string, position: Position = null, documents: TextDocuments = null, event: string = null) {
+        return new YcmRequest(this.window, this.port, this.hmacSecret, this.workingDir, currentDocument, position, documents, event)
     }
 
-    private async verifyHmac(data: string, hmac: string) {
-        const hmac2 = await this.generateHmac(data, 'base64')
-        if (!_.isString(hmac) || !_.isString(hmac2)) return false
-        return hmac === hmac2
+    private runCompleterCommand(documentUri: string, position: Position, documents: TextDocuments, command: string) {
+        return this.buildRequest(documentUri, position, documents, command).isCommand().request()
     }
 
-    private signMessage(message: rp.RequestPromiseOptions, path: string, payload: string) {
-        const hmac = this.generateHmac(Buffer.concat([
-            this.generateHmac(message.method),
-            this.generateHmac(path),
-            this.generateHmac(payload)]), 'base64')
-        message.headers['X-Ycm-Hmac'] = hmac
+    private eventNotification(documentUri: string, position: Position, documents: TextDocuments, event: string) {
+        return this.buildRequest(documentUri, position, documents, event).request()
     }
 
-    private escapeUnicode(str: string) {
-        const result: string[] = []
-        for (const i of _.range(str.length)) {
-            const char = str.charAt(i)
-            const charCode = str.charCodeAt(i)
-            if (charCode < 0x80) result.push(char)
-            else result.push(('\\u' + ('0000' + charCode.toString(16)).substr(-4)))
-        }
-        return result.join('')
-    }
-
-    private async request(method: 'POST' | 'GET', endpoint: string, params: RequestType = null) {
-        const message: rp.RequestPromiseOptions = {
-            port: this.port,
-            method: method,
-            headers: {},
-            gzip: false,
-            resolveWithFullResponse: true
-            // timeout: 5000
-        }
-        const path = url.resolve('/', endpoint)
-        if (method === 'GET') message.qs = params
-        else {
-            const payload = this.escapeUnicode(JSON.stringify(params))
-            this.signMessage(message, path, payload)
-            message.headers['Content-Type'] = 'application/json'
-            message.headers['Content-Length'] = payload.length
-            message.body = payload
-        }
-        const response = await rp(`http://localhost:${this.port}${path}`, message)
-        if (!this.verifyHmac(response.body, response.headers['x-ycm-hmac'])) throw new Error('Hmac check failed')
-        logger('request', response.body)
-        return JSON.parse(response.body)
-    }
-
-
-    private buildRequest(document: TextDocument, position: Position, documents: TextDocuments): RequestType
-    private buildRequest(document: TextDocument, position: Position, documents: TextDocuments, event: string): RequestEventType
-    private buildRequest(document: TextDocument, position: Position = null, documents: TextDocuments = null, event: string = null) {
-        const url = crossPlatformUri(document.uri)
-        // const url = document.uri
-        logger(`buildRequest`, `document, ${url}; position: ${position}; event: ${event}`)
-        const params: RequestType = {
-            filepath: url,
-            working_dir: this.workingDir,
-            file_data: { }
-        }
-        documents.all().forEach(it => {
-            const url = crossPlatformUri(it.uri)
-            params.file_data[url] = {
-                contents: document.getText(),
-                filetypes: [document.languageId]
-            }
-        })
-
-        if (!!position) {
-            params.line_num = position.line + 1
-            params.column_num = position.character + 1
-        } else {
-            params.line_num = 1
-            params.column_num = 1
-        }
-
-        if (!!event) {
-            return _.assign(params, {
-                event_name: event
-            })
-        }
-        return params
-    }
-
-    private buildCommandRequest(document: TextDocument, position: Position, documents: TextDocuments, command: string): RequestCommandType {
-        const params = this.buildRequest(document, position, documents) as RequestCommandType
-        params.command_arguments = [command]
-        params.completer_target = 'filetype_default'
-        return params
-    }
-
-    public async getReady(document: TextDocument, documents: TextDocuments) {
-        const params = this.buildRequest(document, null, documents, 'BufferVisit')
-        const response = await this.request('POST', 'event_notification', params)
+    public async getReady(documentUri: string, documents: TextDocuments) {
+        const response = await this.eventNotification(documentUri, null, documents, 'BufferVisit')
         logger(`getReady`, JSON.stringify(response))
     }
 
-    public async completion(document: TextDocument, position: Position, documents: TextDocuments): Promise<CompletionItem[]> {
-        const params = this.buildRequest(document, position, documents)
-        const response = await this.request('POST', 'completions', params)
-        this.checkUnknownExtraConf(response, document, position, documents)
+    public async completion(documentUri: string, position: Position, documents: TextDocuments): Promise<CompletionItem[]> {
+        const request = this.buildRequest(documentUri, position, documents)
+        const response = await request.request('completions')
         const completions = response['completions'] as YcmCompletionItem[]
         const res = mapYcmCompletionsToLanguageServerCompletions(completions)
         logger(`completion`, `ycm responsed ${res.length} items`)
         return res
     }
 
-    private checkUnknownExtraConf(body: any, document: TextDocument, position: Position, documents: TextDocuments) {
-        if (!!body && _.isArray(body.errors) && body.errors.length === 1) {
-            const error = body.errors[0] as YcmError
-            if (error.exception.TYPE === 'UnknownExtraConf') {
-                const unknownConfError = error as YcmExtraConfError
-                const req = {filepath: unknownConfError.exception.extra_conf_file} as RequestType
-                this.window.showInformationMessage<ConfirmExtraConfActionItem>(`[Ycm] Found ${unknownConfError.exception.extra_conf_file}. Load? `, {
-                    title: 'Load',
-                    path: unknownConfError.exception.extra_conf_file
-                }, {
-                    title: 'Ignore',
-                    path: unknownConfError.exception.extra_conf_file
-                }).then(it => {
-                    if (it.title === 'Load') {
-                        this.request('POST', '/load_extra_conf_file', req)
-                    } else {
-                        this.request('POST', '/ignore_extra_conf_file', req)
-                    }
-                })
-                throw new Error('ExtraConfFile question found.')
-            }
-        }
-    }
-
-    private requestEvent(document: TextDocument, documents: TextDocuments, event: string) {
-        const params = this.buildRequest(document, null, documents, event)
-        return this.request('POST', 'event_notification', params)
-    }
-
-    private async runCompleterCommand(document: TextDocument, position: Position, documents: TextDocuments, command: string) {
-        const params = this.buildCommandRequest(document, position, documents, command)
-        const response = await this.request('POST', 'run_completer_command', params)
-        return response
-    }
-
-    public async getType(document: TextDocument, position: Position, documents: TextDocuments) {
-        const type = await this.runCompleterCommand(document, position, documents, 'GetType') as YcmGetTypeResponse
+    public async getType(documentUri: string, position: Position, documents: TextDocuments) {
+        const type = await this.runCompleterCommand(documentUri, position, documents, 'GetType') as YcmGetTypeResponse
         logger('getType', JSON.stringify(type))
-        return mapYcmTypeToHover(type, document.languageId)
+        return mapYcmTypeToHover(type, documents.get(documentUri).languageId)
     }
 
-    public async goToDefinition(document: TextDocument, position: Position, documents: TextDocuments) {
-        const definition = await this.runCompleterCommand(document, position, documents, 'GoToDefinition')
+    public async goToDefinition(documentUri: string, position: Position, documents: TextDocuments) {
+        const definition = await this.runCompleterCommand(documentUri, position, documents, 'GoToDefinition')
         logger('goToDefinition', JSON.stringify(definition))
         return mapYcmLocationToLocation(definition as YcmLocation)
     }
 
-    public async goToImprecise(document: TextDocument, position: Position, documents: TextDocuments) {
-        const goto = await this.runCompleterCommand(document, position, documents, 'GoToImprecise')
-        logger('goToImprecise', JSON.stringify(goto))
-    }
-
-    public async getDoc(document: TextDocument, position: Position, documents: TextDocuments) {
-        const doc = await this.runCompleterCommand(document, position, documents, 'GetDoc')
+    public async getDoc(documentUri: string, position: Position, documents: TextDocuments) {
+        const doc = await this.runCompleterCommand(documentUri, position, documents, 'GetDoc')
         logger('getDoc', JSON.stringify(doc))
     }
 
-    public async getDocQuick(document: TextDocument, position: Position, documents: TextDocuments) {
-        const doc = await this.runCompleterCommand(document, position, documents, 'GetDocQuick')
+    public async getDocQuick(documentUri: string, position: Position, documents: TextDocuments) {
+        const doc = await this.runCompleterCommand(documentUri, position, documents, 'GetDocQuick')
         logger('getDocQuick', JSON.stringify(doc))
     }
 
-    public async readyToParse(document: TextDocument, documents: TextDocuments): Promise<Diagnostic[]> {
+    public async readyToParse(documentUri: string, documents: TextDocuments): Promise<Diagnostic[]> {
         try {
-            const response = await this.requestEvent(document, documents, 'FileReadyToParse')
+            const response = await this.eventNotification(documentUri, null, documents, 'FileReadyToParse')
             if (!_.isArray(response)) return []
             logger(`readyToParse`, `ycm responsed ${response.length} items`)
             const issues = response as YcmDiagnosticItem[]
-            const uri = crossPlatformUri(document.uri)
+            const uri = crossPlatformUri(documentUri)
             return mapYcmDiagnosticToLanguageServerDiagnostic(issues.filter(it => it.location.filepath === uri))
                 .filter(it => !!it.range)
         } catch (err) {
@@ -387,36 +261,13 @@ export default class Ycm {
         }
     }
 
-    public async currentIdentifierFinished(document: TextDocument, documents: TextDocuments) {
-        await this.requestEvent(document, documents, 'CurrentIdentifierFinished')
+    public async currentIdentifierFinished(documentUri: string, documents: TextDocuments) {
+        await this.eventNotification(documentUri, null, documents, 'CurrentIdentifierFinished')
     }
 
-    public async insertLeave(document: TextDocument, documents: TextDocuments) {
-        await this.requestEvent(document, documents, 'InsertLeave')
+    public async insertLeave(documentUri: string, documents: TextDocuments) {
+        await this.eventNotification(documentUri, null, documents, 'InsertLeave')
     }
-}
-
-type RequestType = {
-    filepath: string,
-    working_dir: string,
-    line_num?: number,
-    column_num?: number,
-    force_semantic?: boolean
-    file_data: {
-        [key: string]: {
-            contents: string,
-            filetypes: string[]
-        }
-    }
-}
-
-type RequestEventType = RequestType & {
-    event_name: string
-}
-
-type RequestCommandType = RequestType & {
-    command_arguments: string[],
-    completer_target: 'filetype_default'
 }
 
 export type YcmCompletionItem = {
@@ -425,23 +276,6 @@ export type YcmCompletionItem = {
     detailed_info: string
     extra_menu_info: string
     kind: string
-}
-
-export type YcmError = {
-    exception: {
-        TYPE: string,
-        traceback: string
-    }
-}
-
-export type YcmExtraConfError = YcmError & {
-    exception: {
-        extra_conf_file: string
-    }
-}
-
-export interface ConfirmExtraConfActionItem extends MessageActionItem {
-    path: string
 }
 
 export type YcmLocation = {

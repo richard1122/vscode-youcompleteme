@@ -112,6 +112,7 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticI
 
 export function mapYcmTypeToHover(res: YcmGetTypeResponse, language: string): Hover | null {
     if (res.message === 'Unknown type') return null
+    if (res.message === 'Internal error: cursor not valid') return null
     return {
         contents: {
             language: language,
@@ -147,8 +148,9 @@ export function crossPlatformUri(uri: string) {
 
 
 
-const isDebug = false
+const isDebug = true
 export function logger(tag: string, ...args: any[]) {
     args.unshift(`[${tag}]`)
     if (isDebug) console.log.apply(console, args)
 }
+

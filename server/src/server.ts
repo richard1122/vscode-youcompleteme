@@ -53,7 +53,7 @@ connection.onInitialize((params): InitializeResult => {
 connection.onHover(async (event): Promise<Hover> => {
     const ycm = await getYcm()
     try {
-        return await ycm.getType(documents.get(event.textDocument.uri), event.position, documents)
+        return await ycm.getType(event.textDocument.uri, event.position, documents)
     } catch (err) {
         logger(`onHover error`, err)
     }
@@ -62,7 +62,7 @@ connection.onHover(async (event): Promise<Hover> => {
 connection.onDefinition(async (event) => {
     const ycm = await getYcm()
     try {
-        return await ycm.goToDefinition(documents.get(event.textDocument.uri), event.position, documents)
+        return await ycm.goToDefinition(event.textDocument.uri, event.position, documents)
     } catch (err) {
         logger(`onDefinition error`, err)
     }
@@ -77,7 +77,7 @@ documents.onDidChangeContent(async (change) => {
     //     uri: change.document.uri,
     //     diagnostics: await ycm.readyToParse(change.document, documents)
     // })
-    ycm.currentIdentifierFinished(change.document, documents)
+    ycm.currentIdentifierFinished(change.document.uri, documents)
     // await getIssues(change.document)
     // validateTextDocument(change.document)
 })
@@ -98,7 +98,7 @@ async function getIssues(document: TextDocument) {
     const ycm = await getYcm()
     connection.sendDiagnostics({
         uri: document.uri,
-        diagnostics: await ycm.readyToParse(document, documents)
+        diagnostics: await ycm.readyToParse(document.uri, documents)
     })
 }
 
@@ -106,7 +106,7 @@ connection.onSignatureHelp(async (event) => {
     logger(`onSignatureHelp: ${JSON.stringify(event)}`)
     try {
         const ycm = await getYcm()
-        await ycm.getDocQuick(documents.get(event.textDocument.uri), event.position, documents)
+        await ycm.getDocQuick(event.textDocument.uri, event.position, documents)
         return null
     } catch (err) {
         logger('onSignatureHelp error', err)
@@ -139,7 +139,7 @@ documents.onDidOpen(async (event) => {
     logger(`onDidOpen`, event.document.uri)
     const ycm = await getYcm()
     try {
-        await ycm.getReady(event.document, documents)
+        await ycm.getReady(event.document.uri, documents)
     } catch (err) {
         logger('onDidOpen error', err)
     }
@@ -182,7 +182,7 @@ connection.onCompletion(async (textDocumentPosition: TextDocumentPositionParams)
     // await ycm.currentIdentifierFinished(documents.get(textDocumentPosition.textDocument.uri), documents)
     // await ycm.readyToParse(documents.get(textDocumentPosition.textDocument.uri), documents)
     try {
-        const latestCompletions = await ycm.completion(documents.get(textDocumentPosition.textDocument.uri), textDocumentPosition.position, documents)
+        const latestCompletions = await ycm.completion(textDocumentPosition.textDocument.uri, textDocumentPosition.position, documents)
         return latestCompletions
     } catch (err) {
         return null

@@ -131,8 +131,6 @@ connection.onDidChangeConfiguration(async (change) => {
 function ensureValidConfiguration(settings: Settings) {
     if (!settings.ycmd || !settings.ycmd.path)
         throw new Error('Invalid ycm path')
-    if (!settings.ycmd.global_extra_config)
-        throw new Error('Invalid ycm global extra config path')
 }
 
 documents.onDidOpen(async (event) => {

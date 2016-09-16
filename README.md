@@ -44,9 +44,10 @@ getType
 ## Configuration
 
 * `ycmd.path`: The directory you installed ycmd, like: `C:/Users/YOURNAME/.vim/bundle/YouCompleteMe/third_party/ycmd`
-* `ycmd.global_extra_config`: see [ycm's Readme](https://github.com/Valloric/YouCompleteMe/blob/master/README.md#the-gycm_global_ycm_extra_conf-option)
+* `ycmd.global_extra_config`: Optional, see [ycm's Readme](https://github.com/Valloric/YouCompleteMe/blob/master/README.md#the-gycm_global_ycm_extra_conf-option)
 * `ycmd.python`: Optional, python execuable path.
-* `ycmd.confirm_extra_conf`: see [ycm's Readme](https://github.com/Valloric/YouCompleteMe/blob/master/README.md#the-gycm_confirm_extra_conf-option)
+* `ycmd.confirm_extra_conf`: Optional, see [ycm's Readme](https://github.com/Valloric/YouCompleteMe/blob/master/README.md#the-gycm_confirm_extra_conf-option)
+* `ycmd.enabled_languages`: Optional, default is `["c", "cpp"]`
 
 
 ## More languages

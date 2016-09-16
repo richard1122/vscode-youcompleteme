@@ -31,7 +31,7 @@
         },
         "ycmd.global_extra_config": {
           "type": "string",
-          "default": null,
+          "default": "",
           "description": "The fallback extra config file when no `.ycm_extra_conf.py` is found. Follow https://github.com/Valloric/YouCompleteMe#the-gycm_global_ycm_extra_conf-option for more information."
         },
         "ycmd.enabled_languages": {

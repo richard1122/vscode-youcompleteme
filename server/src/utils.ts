@@ -22,7 +22,8 @@ export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: Yc
             sortText: _.padStart(index.toString(), len, '0')
         } as CompletionItem
         switch (it.kind) {
-            case 'TYPE', 'STRUCT':
+            case 'TYPE':
+            case 'STRUCT':
                 item.kind = CompletionItemKind.Interface
                 break
             case 'ENUM':
@@ -49,7 +50,9 @@ export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: Yc
             case 'CLASS':
                 item.kind = CompletionItemKind.Class
                 break
-            case '[File]', '[Dir]', '[File&Dir]':
+            case '[File]':
+            case '[Dir]':
+            case '[File&Dir]':
                 item.kind = CompletionItemKind.File
                 break
             default:

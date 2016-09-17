@@ -55,6 +55,7 @@ export default class YcmRequest {
 
     private _request(endpoint: string, params: any,  method: 'POST' | 'GET' = 'POST') {
         return new Promise<any>((resolve, reject) => {
+            logger('_request', JSON.stringify(params))
             const path = url.resolve('/', endpoint)
             let payload: string
             const message: http.RequestOptions = {

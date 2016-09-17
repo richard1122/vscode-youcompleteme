@@ -15,13 +15,13 @@ export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: Yc
     const len = CompletionItems.length.toString().length
     return _.map(CompletionItems, (it, index) => {
         const item = {
-            label: it.menu_text,
+            label: it.menu_text || it.insertion_text,
             detail: it.extra_menu_info,
             insertText: it.insertion_text,
             documentation: it.detailed_info,
             sortText: _.padStart(index.toString(), len, '0')
         } as CompletionItem
-        switch (it.kind) {
+        switch (it.kind || it.extra_menu_info) {
             case 'TYPE':
             case 'STRUCT':
                 item.kind = CompletionItemKind.Interface

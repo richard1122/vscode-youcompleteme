@@ -149,8 +149,7 @@ export function crossPlatformUri(uri: string) {
     return Uri.parse(uri).fsPath
 }
 
-
-const isDebug = false
+let isDebug = false
 
 export function loggerInit(debug: boolean) {
     isDebug = debug

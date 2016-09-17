@@ -5,10 +5,8 @@ import * as path from 'path'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as _ from 'lodash'
-import * as http from 'http'
 import * as url from 'url'
 import * as qs from 'querystring'
-import * as rp from 'request-promise'
 
 import {
     mapYcmCompletionsToLanguageServerCompletions,

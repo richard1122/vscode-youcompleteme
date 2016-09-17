@@ -1,7 +1,8 @@
 import * as crypto from 'crypto'
-import * as rp from 'request-promise'
 import * as url from 'url'
 import * as _ from 'lodash'
+import * as http from 'http'
+import * as qs from 'querystring'
 
 import {
     IPCMessageReader, IPCMessageWriter,
@@ -52,28 +53,45 @@ export default class YcmRequest {
         return this
     }
 
-    private async _request(endpoint: string, params: any,  method: 'POST' | 'GET' = 'POST') {
-        const message: rp.RequestPromiseOptions = {
-            port: this.port,
-            method: method,
-            headers: {},
-            gzip: false,
-            resolveWithFullResponse: true
-            // timeout: 5000
-        }
-        const path = url.resolve('/', endpoint)
-        if (method === 'GET') message.qs = params
-        else {
-            const payload = this.escapeUnicode(JSON.stringify(params))
-            this.signMessage(message, path, payload)
-            message.headers['Content-Type'] = 'application/json'
-            message.headers['Content-Length'] = payload.length
-            message.body = payload
-        }
-        const response = await rp(`http://localhost:${this.port}${path}`, message)
-        if (!this.verifyHmac(response.body, response.headers['x-ycm-hmac'])) throw new Error('Hmac check failed')
-        logger('response', response.body)
-        return JSON.parse(response.body)
+    private _request(endpoint: string, params: any,  method: 'POST' | 'GET' = 'POST') {
+        return new Promise<any>((resolve, reject) => {
+            const path = url.resolve('/', endpoint)
+            let payload: string
+            const message: http.RequestOptions = {
+                port: this.port,
+                host: 'localhost',
+                method: method,
+                path: path,
+                headers: {}
+            }
+            if (method === 'GET') {
+                message.path = `${message.path}?${qs.stringify(params)}`
+            } else {
+                payload = this.escapeUnicode(JSON.stringify(params))
+                this.signMessage(message, path, payload)
+                message.headers['Content-Type'] = 'application/json'
+                message.headers['Content-Length'] = payload.length
+            }
+            const req = http.request(message, (res) => {
+                logger('_request', `status code: ${res.statusCode}`)
+                if (res.statusCode < 200 || res.statusCode > 299) reject(new Error('Network failed'))
+                res.setEncoding('utf8')
+                const mac = res.headers['x-ycm-hmac'] as string
+                let response = ''
+                res.on('data', (chunk) => {
+                    response += chunk
+                })
+                res.on('end', () => {
+                    logger('_request', response)
+                    if (!this.verifyHmac(response, mac)) reject(new Error('Hmac check failed.'))
+                    else resolve(JSON.parse(response))
+                })
+                res.on('error', (err) => {
+                    reject(err)
+                })
+            })
+            req.write(payload)
+        })
     }
 
     public async request(endpoint: string = null, method: 'POST' | 'GET' = 'POST') {
@@ -159,7 +177,7 @@ export default class YcmRequest {
         return hmac === hmac2
     }
 
-    private signMessage(message: rp.RequestPromiseOptions, path: string, payload: string) {
+    private signMessage(message: http.RequestOptions, path: string, payload: string) {
         const hmac = this.generateHmac(Buffer.concat([
             this.generateHmac(message.method),
             this.generateHmac(path),

@@ -157,6 +157,8 @@ export function loggerInit(debug: boolean) {
 
 export function logger(tag: string, ...args: any[]) {
     args.unshift(`[${tag}]`)
+    /* tslint:disable:no-console */
     if (isDebug) console.log.apply(console, args)
+    /* tslint:enable:no-console */
 }
 

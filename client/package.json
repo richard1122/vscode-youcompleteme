@@ -50,6 +50,11 @@
           "type": "string",
           "default": "python",
           "description": "python execuable path"
+        },
+        "ycmd.debug": {
+          "type": "boolean",
+          "default": false,
+          "description": "show debug messages"
         }
       }
     },

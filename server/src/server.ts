@@ -13,7 +13,7 @@ import {
 } from 'vscode-languageserver'
 import Ycm, {Settings} from './ycm'
 import * as _ from 'lodash'
-import {logger} from './utils'
+import {logger, loggerInit} from './utils'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process))
@@ -118,6 +118,7 @@ connection.onSignatureHelp(async (event) => {
 // as well.
 connection.onDidChangeConfiguration(async (change) => {
     let settings = <Settings>change.settings
+    loggerInit(settings.ycmd.debug)
     logger(`onDidChangeConfiguration settings`, JSON.stringify(settings))
     try {
         ensureValidConfiguration(settings)

@@ -150,8 +150,12 @@ export function crossPlatformUri(uri: string) {
 }
 
 
+const isDebug = false
 
-const isDebug = true
+export function loggerInit(debug: boolean) {
+    isDebug = debug
+}
+
 export function logger(tag: string, ...args: any[]) {
     args.unshift(`[${tag}]`)
     if (isDebug) console.log.apply(console, args)

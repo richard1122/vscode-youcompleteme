@@ -307,6 +307,7 @@ export interface Settings {
         path: string
         global_extra_config: string,
         python: string,
-        confirm_extra_conf: boolean
+        confirm_extra_conf: boolean,
+        debug: boolean
     }
 }

@@ -144,8 +144,7 @@ export default class Ycm {
             logger('start', `ycm started: ${ycm.process.pid}`)
             return ycm
         } catch (err) {
-            logger('start error', err)
-            return null
+            throw err
         }
     }
 
@@ -162,9 +161,10 @@ export default class Ycm {
                 Ycm.Initializing = true
                 Ycm.Instance = await Ycm.start(workingDir, settings, window)
             } catch (err) {
-                logger('getInstance error', err)
+                throw err
+            } finally {
+                Ycm.Initializing = false
             }
-            Ycm.Initializing = false
         }
         return Ycm.Instance
     }

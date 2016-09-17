@@ -84,13 +84,14 @@ documents.onDidChangeContent(async (change) => {
 
 // The settings interface describe the server relevant settings part
 
-function getYcm(): Promise<Ycm> {
+async function getYcm(): Promise<Ycm> {
     if (!workspaceRoot || !workspaceConfiguration)
-        return new Promise<Ycm>((resolve, reject) => setTimeout(() => getYcm(), 100))
+        return await new Promise<Ycm>((resolve, reject) => setTimeout(() => getYcm(), 100))
     try {
-        return Ycm.getInstance(workspaceRoot, workspaceConfiguration, connection.window)
+        return await Ycm.getInstance(workspaceRoot, workspaceConfiguration, connection.window)
     } catch (err) {
-        connection.window.showWarningMessage('Ycm startup failed. Please check your ycmd path or python execuable path.')
+        logger('getYcm error', err)
+        connection.window.showErrorMessage(`Ycm startup failed. Please check your ycmd or python path. Detail: ${err.message || err}`)
     }
 }
 
@@ -123,10 +124,10 @@ connection.onDidChangeConfiguration(async (change) => {
     try {
         ensureValidConfiguration(settings)
         workspaceConfiguration = settings
-        await getYcm()
     } catch (err) {
         connection.window.showErrorMessage(`[Ycm] ${err.message || err}`)
     }
+    await getYcm()
 })
 
 function ensureValidConfiguration(settings: Settings) {

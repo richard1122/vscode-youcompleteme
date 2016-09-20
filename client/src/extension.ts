@@ -9,6 +9,9 @@ import * as path from 'path'
 import { workspace, Disposable, ExtensionContext, window, commands } from 'vscode'
 import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind } from 'vscode-languageclient'
 
+let client: LanguageClient
+let disposable: Disposable
+
 export function activate(context: ExtensionContext) {
 
     // The server is implemented in node
@@ -36,11 +39,11 @@ export function activate(context: ExtensionContext) {
 
 
     // Create the language client and start the client.
-    const client = new LanguageClient('ycm-language-server', serverOptions, clientOptions)
+    client = new LanguageClient('ycm-language-server', serverOptions, clientOptions)
     client.onNotification<string>({method: 'error'}, (params) => {
         window.showErrorMessage(`[ycm] ${params}`)
     })
-    let disposable = client.start()
+    disposable = client.start()
 
     commands.registerCommand('ycm.lint', (args) => {
         console.log(JSON.stringify(args))
@@ -48,6 +51,7 @@ export function activate(context: ExtensionContext) {
             method: 'lint'
         }, window.activeTextEditor.document.uri.toString())
     })
+
     // Push the disposable to the context's subscriptions so that the 
     // client can be deactivated on extension deactivation
     context.subscriptions.push(disposable)

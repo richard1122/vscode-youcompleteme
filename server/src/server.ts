@@ -131,7 +131,7 @@ async function getIssues(document: TextDocument) {
 //     // try {
 //     //     // const ycm = await getYcm()
 //     //     // await ycm.getDocQuick(event.textDocument.uri, event.position, documents)
-        
+
 //     // } catch (err) {
 //     //     logger('onSignatureHelp error', err)
 //     // }

@@ -37,6 +37,7 @@ export default class Ycm {
     private window: RemoteWindow
 
     private settings: Settings
+    private YcmdPid: number
 
     private constructor(settings: Settings) {
         this.settings = settings
@@ -140,6 +141,7 @@ export default class Ycm {
             logger('start', `optionsFile: ${optionsFile}`)
             ycm.process = await ycm._start(optionsFile)
             logger('start', `ycm started: ${ycm.process.pid}`)
+            await ycm.saveYcmdPidWindows()
             return ycm
         } catch (err) {
             throw err
@@ -167,17 +169,24 @@ export default class Ycm {
         return Ycm.Instance
     }
 
-    public async reset() {
+    public static reset() {
+        if (!!Ycm.Instance) {
+            Ycm.Instance.reset()
+        }
+    }
+
+    public reset() {
         if (!!this.process) {
-            if (process.platform === 'win32') await this.killOnWindows()
+            if (!!this.YcmdPid) process.kill(this.YcmdPid)
             // TODO: kill cmd.exe may not kill python
             this.process.kill()
+            this.process = null
             this.port = null
             this.hmacSecret = null
         }
     }
 
-    private killOnWindows() {
+    private saveYcmdPidWindows() {
         return new Promise((resolve, reject) => {
             const parentPid = this.process.pid
             const wmic = childProcess.spawn('wmic', [
@@ -191,7 +200,8 @@ export default class Ycm {
                     .filter(pid => /^\d+$/.test(pid))
                     .map(pid => parseInt(pid))
                     .filter(pid => pid !== parentPid && pid > 0 && pid < Infinity)
-                    .map(pid => process.kill(pid))
+                    .forEach(pid => this.YcmdPid = pid)
+                logger('saveYcmdPidWindows', `windows ycmd pid=${this.YcmdPid}`)
                 resolve()
             })
         })

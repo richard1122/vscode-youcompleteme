@@ -9,7 +9,7 @@ import {
     createConnection, IConnection, TextDocumentSyncKind,
     TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
     InitializeParams, InitializeResult, TextDocumentPositionParams,
-    CompletionItem, CompletionItemKind, Hover
+    CompletionItem, CompletionItemKind, Hover, SignatureHelp
 } from 'vscode-languageserver'
 import Ycm, {Settings} from './ycm'
 import * as _ from 'lodash'
@@ -43,9 +43,9 @@ connection.onInitialize((params): InitializeResult => {
             },
             hoverProvider: true,
             definitionProvider: true,
-            signatureHelpProvider: {
-                triggerCharacters: ['(']
-            }
+            // signatureHelpProvider: {
+            //     triggerCharacters: ['(']
+            // }
         }
     }
 })
@@ -103,16 +103,39 @@ async function getIssues(document: TextDocument) {
     })
 }
 
-connection.onSignatureHelp(async (event) => {
-    logger(`onSignatureHelp: ${JSON.stringify(event)}`)
-    try {
-        const ycm = await getYcm()
-        await ycm.getDocQuick(event.textDocument.uri, event.position, documents)
-        return null
-    } catch (err) {
-        logger('onSignatureHelp error', err)
-    }
-})
+// connection.onSignatureHelp((event) => {
+//     logger(`onSignatureHelp: ${JSON.stringify(event)}`)
+//     return {
+//         signatures: [{
+//             label: 'test1',
+//             documentation: ' test1 test1 test1 test1 test1 test1 test1 test1',
+//             parameters: [{
+//                 label: 'string',
+//                 documentation: 'string string string'
+//             }, {
+//                 label: 'int',
+//                 documentation: 'int int int'
+//             }]
+//         }, {
+//             label: 'test2',
+//             documentation: ' test2 test2 test2 test2 test2 test2 test2 test2',
+//             parameters: [{
+//                 label: 'int',
+//                 documentation: 'string string string'
+//             }, {
+//                 label: 'string',
+//                 documentation: 'int int int'
+//             }]
+//         }]
+//     } as SignatureHelp
+//     // try {
+//     //     // const ycm = await getYcm()
+//     //     // await ycm.getDocQuick(event.textDocument.uri, event.position, documents)
+        
+//     // } catch (err) {
+//     //     logger('onSignatureHelp error', err)
+//     // }
+// })
 
 
 // The settings have changed. Is send on server activation
@@ -189,14 +212,20 @@ connection.onCompletion(async (textDocumentPosition: TextDocumentPositionParams)
     }
 })
 
+connection.onShutdown(async () => {
+    logger('onShutdown')
+    Ycm.reset()
+})
+
+connection.onExit(async () => {
+    logger('onExit')
+    Ycm.reset()
+})
+
 // This handler resolve additional information for the item selected in
 // the completion list.
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
     return item
-})
-
-connection.onExit(() => {
-    getYcm().then(ycm => ycm.reset())
 })
 
 // connection.onDidOpenTextDocument((params) => {

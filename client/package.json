@@ -55,6 +55,11 @@
           "type": "boolean",
           "default": false,
           "description": "show debug messages"
+        },
+        "ycmd.enable_hover_type": {
+          "type": "boolean",
+          "default": true,
+          "description": "GetType from ycmd by hover on variable"
         }
       }
     },

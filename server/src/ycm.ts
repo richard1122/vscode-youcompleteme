@@ -234,6 +234,7 @@ export default class Ycm {
     }
 
     public async getType(documentUri: string, position: Position, documents: TextDocuments) {
+        if (!this.settings.ycmd.enable_hover_type) return null
         const type = await this.runCompleterCommand(documentUri, position, documents, 'GetType') as YcmGetTypeResponse
         logger('getType', JSON.stringify(type))
         return mapYcmTypeToHover(type, documents.get(documentUri).languageId)
@@ -316,6 +317,7 @@ export interface Settings {
         global_extra_config: string,
         python: string,
         confirm_extra_conf: boolean,
-        debug: boolean
+        debug: boolean,
+        enable_hover_type: boolean
     }
 }

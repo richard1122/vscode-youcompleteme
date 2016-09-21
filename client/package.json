@@ -3,7 +3,7 @@
   "description": "YouCompleteMe for vscode",
   "author": "Richard He",
   "license": "MIT",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "publisher": "RichardHe",
   "repository": {
     "type": "git",
@@ -55,6 +55,11 @@
           "type": "boolean",
           "default": false,
           "description": "show debug messages"
+        },
+        "ycmd.enable_hover_type": {
+          "type": "boolean",
+          "default": true,
+          "description": "GetType from ycmd by hover on variable"
         }
       }
     },

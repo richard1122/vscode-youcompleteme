@@ -2,7 +2,8 @@
   "globalDependencies": {
     "lodash": "registry:dt/lodash#4.14.0+20160830145422",
     "node": "registry:env/node#6.0.0+20160902022231",
-    "promise": "https://raw.githubusercontent.com/Microsoft/vscode-languageserver-node-example/master/server/typings/promise.d.ts"
+    "promise": "https://raw.githubusercontent.com/Microsoft/vscode-languageserver-node-example/master/server/typings/promise.d.ts",
+    "Ycm": "https://raw.githubusercontent.com/richard1122/vscode-youcompleteme/d44ddbc77f7b5af5ed906c28a6ea5f4a17970674/typings/ycm.d.ts"
   },
   "dependencies": {
     "form-data": "registry:npm/form-data#1.0.0+20160812072516"

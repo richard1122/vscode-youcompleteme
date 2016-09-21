@@ -9,7 +9,8 @@ import {
     createConnection, IConnection, TextDocumentSyncKind,
     TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
     InitializeParams, InitializeResult, TextDocumentPositionParams,
-    CompletionItem, CompletionItemKind, Hover, SignatureHelp
+    CompletionItem, CompletionItemKind, Hover, SignatureHelp,
+    Command, CodeActionParams
 } from 'vscode-languageserver'
 import Ycm, {Settings} from './ycm'
 import * as _ from 'lodash'
@@ -46,9 +47,28 @@ connection.onInitialize((params): InitializeResult => {
             // signatureHelpProvider: {
             //     triggerCharacters: ['(']
             // }
+            codeActionProvider: true
         }
     }
 })
+
+connection.onCodeAction(async (param) => {
+    logger('onCodeAction', JSON.stringify(param))
+    const ycm = await getYcm()
+    const fixs = await ycm.fixIt(param.textDocument.uri, param.range.start, documents)
+    return fixs.map(it => {
+        return {
+            title: `Fix: ${it.text}`,
+            command: 'ycm.FixIt',
+            arguments: [it]
+        }
+    }) as Command[]
+})
+
+connection.onNotification<YcmFixIt>({ method: 'FixIt'}, async (args) => {
+    logger('On FixIt', JSON.stringify(args))
+})
+
 
 connection.onHover(async (event): Promise<Hover> => {
     const ycm = await getYcm()
@@ -73,13 +93,6 @@ connection.onDefinition(async (event) => {
 documents.onDidChangeContent(async (change) => {
     logger(`onDidChangeContent ${JSON.stringify(change.document.uri)}`)
     const ycm = await getYcm()
-    // connection.sendDiagnostics({
-    //     uri: change.document.uri,
-    //     diagnostics: await ycm.readyToParse(change.document, documents)
-    // })
-    ycm.currentIdentifierFinished(change.document.uri, documents)
-    // await getIssues(change.document)
-    // validateTextDocument(change.document)
 })
 
 // The settings interface describe the server relevant settings part
@@ -217,10 +230,10 @@ connection.onShutdown(async () => {
     Ycm.reset()
 })
 
-connection.onExit(async () => {
-    logger('onExit')
-    Ycm.reset()
-})
+// connection.onExit(async () => {
+//     logger('onExit')
+//     Ycm.reset()
+// })
 
 // This handler resolve additional information for the item selected in
 // the completion list.

@@ -256,6 +256,11 @@ export default class Ycm {
         logger('getDocQuick', JSON.stringify(doc))
     }
 
+    public async getDetailedDiagnostic(documentUri: string, position: Position, documents: TextDocuments) {
+        const request = this.buildRequest(documentUri, position, documents)
+        const response = await request.request('detailed_diagnostic')
+    }
+
     public async readyToParse(documentUri: string, documents: TextDocuments): Promise<Diagnostic[]> {
         try {
             const response = await this.eventNotification(documentUri, null, documents, 'FileReadyToParse')
@@ -270,6 +275,17 @@ export default class Ycm {
         }
     }
 
+    public async fixIt(documentUri: string, position: Position, documents: TextDocuments) {
+        const response = await this.runCompleterCommand(documentUri, position, documents, 'FixIt')
+        const fixits = response.fixits as YcmFixIt[]
+        const uri = crossPlatformUri(documentUri)
+        fixits.forEach(it => {
+            if (it.text.indexOf(uri) !== -1)
+                it.text = it.text.replace(`${uri}:`, '')
+        })
+        return fixits
+    }
+
     public async currentIdentifierFinished(documentUri: string, documents: TextDocuments) {
         await this.eventNotification(documentUri, null, documents, 'CurrentIdentifierFinished')
     }
@@ -277,38 +293,6 @@ export default class Ycm {
     public async insertLeave(documentUri: string, documents: TextDocuments) {
         await this.eventNotification(documentUri, null, documents, 'InsertLeave')
     }
-}
-
-export type YcmCompletionItem = {
-    menu_text: string
-    insertion_text: string
-    detailed_info: string
-    extra_menu_info: string
-    kind: string
-}
-
-export type YcmLocation = {
-    filepath: string,
-    column_num: number,
-    line_num: number
-}
-
-export type YcmRange = {
-    start: YcmLocation
-    end: YcmLocation
-}
-
-export type YcmDiagnosticItem = {
-    kind: 'ERROR' | 'WARNING'
-    text: string
-    ranges: YcmRange[]
-    location: YcmLocation
-    location_extent: YcmRange
-    fixit_available: boolean
-}
-
-export type YcmGetTypeResponse = {
-    message: string
 }
 
 export interface Settings {

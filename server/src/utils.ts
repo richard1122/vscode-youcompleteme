@@ -1,4 +1,3 @@
-import {YcmCompletionItem, YcmDiagnosticItem, YcmGetTypeResponse, YcmLocation} from './ycm'
 import {
     IPCMessageReader, IPCMessageWriter,
     createConnection, IConnection, TextDocumentSyncKind,
@@ -68,7 +67,8 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticI
         const item = {
             range: null,
             source: 'ycm',
-            message: it.text
+            message: it.text,
+            code: it.fixit_available ? 'FixIt' : null
         } as Diagnostic
 
         let range = it.location_extent

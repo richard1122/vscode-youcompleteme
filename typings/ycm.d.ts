@@ -26,11 +26,13 @@ type YcmDiagnosticItem = {
     fixit_available: boolean
 }
 
+type YcmChunk = {
+    range: YcmRange
+    replacement_text: string
+}
+
 type YcmFixIt = {
-    chunks: {
-        range: YcmRange
-        replacement_text: string
-    }[]
+    chunks: YcmChunk[]
     text: string
     location: YcmLocation
 }

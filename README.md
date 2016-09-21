@@ -22,7 +22,7 @@ lint
 
 fixit
 
-![fixit](args/fixit.gif)
+![fixit](arts/fixit.gif)
 
 getType
 

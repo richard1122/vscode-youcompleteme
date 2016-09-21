@@ -1,4 +1,4 @@
-export type YcmCompletionItem = {
+export type CompletionItem = {
     menu_text: string
     insertion_text: string
     detailed_info: string
@@ -6,35 +6,35 @@ export type YcmCompletionItem = {
     kind: string
 }
 
-export type YcmLocation = {
+export type Location = {
     filepath: string
     column_num: number
     line_num: number
 }
 
-export type YcmRange = {
-    start: YcmLocation
-    end: YcmLocation
+export type Range = {
+    start: Location
+    end: Location
 }
 
-export type YcmDiagnosticItem = {
+export type DiagnosticItem = {
     kind: 'ERROR' | 'WARNING'
     text: string
-    ranges: YcmRange[]
-    location: YcmLocation
-    location_extent: YcmRange
+    ranges: Range[]
+    location: Location
+    location_extent: Range
     fixit_available: boolean
 }
 
-export type YcmFixIt = {
+export type FixIt = {
     chunks: {
-        range: YcmRange
+        range: Range
         replacement_text: string
     }[]
     text: string
-    locationtion: YcmLocation
+    locationtion: Location
 }
 
-export type YcmGetTypeResponse = {
+export type GetTypeResponse = {
     message: string
 }

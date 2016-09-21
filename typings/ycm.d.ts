@@ -32,7 +32,7 @@ type YcmFixIt = {
         replacement_text: string
     }[]
     text: string
-    locationtion: YcmLocation
+    location: YcmLocation
 }
 
 type YcmGetTypeResponse = {

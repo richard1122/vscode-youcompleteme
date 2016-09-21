@@ -20,6 +20,10 @@ lint
 
 ![completion](arts/lint.gif)
 
+fixit
+
+![fixit](args/fixit.gif)
+
 getType
 
 ![hover](arts/hover.gif)
@@ -28,8 +32,9 @@ getType
 
 * Semantic code completion with Ycmd backend
 * Diagonostic display
-* getType with hover
-* goToDefinition with ctrl+click
+* GetType with hover
+* GoToDefinition with ctrl+click
+* QuickFix
 
 ## Keymaps
 

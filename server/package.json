@@ -10,11 +10,11 @@
   "dependencies": {
     "iconv-lite": "^0.4.13",
     "lodash": "^4.15.0",
-    "vscode-languageserver": "2.5.0",
-    "vscode-uri": "0.0.6"
+    "vscode-languageserver": "2.6.0",
+    "vscode-uri": "1.0.0"
   },
   "devDependencies": {
-    "typescript": "^2.1.0-dev.20160908",
+    "typescript": "^2.1.0-dev.20161108",
     "typings": "^1.3.3"
   },
   "scripts": {

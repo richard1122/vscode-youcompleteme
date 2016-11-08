@@ -233,9 +233,8 @@ export default class Ycm {
         return res
     }
 
-    public async getType(documentUri: string, position: Position, documents: TextDocuments) {
-        if (!this.settings.ycmd.enable_hover_type) return null
-        const type = await this.runCompleterCommand(documentUri, position, documents, 'GetType') as YcmGetTypeResponse
+    public async getType(documentUri: string, position: Position, documents: TextDocuments, imprecise: boolean = false) {
+        const type = await this.runCompleterCommand(documentUri, position, documents, imprecise ? 'GetTypeImprecise' : 'GetType') as YcmGetTypeResponse
         logger('getType', JSON.stringify(type))
         return mapYcmTypeToHover(type, documents.get(documentUri).languageId)
     }
@@ -298,10 +297,11 @@ export default class Ycm {
 export interface Settings {
     ycmd: {
         path: string
-        global_extra_config: string,
-        python: string,
-        confirm_extra_conf: boolean,
-        debug: boolean,
+        global_extra_config: string
+        python: string
+        confirm_extra_conf: boolean
+        debug: boolean
         enable_hover_type: boolean
+        use_imprecise_get_type: boolean
     }
 }

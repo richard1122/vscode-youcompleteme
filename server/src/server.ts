@@ -73,7 +73,7 @@ connection.onNotification<YcmFixIt>({ method: 'FixIt'}, async (args) => {
 connection.onHover(async (event): Promise<Hover> => {
     const ycm = await getYcm()
     try {
-        return await ycm.getType(event.textDocument.uri, event.position, documents)
+        return await ycm.getType(event.textDocument.uri, event.position, documents, workspaceConfiguration.ycmd.use_imprecise_get_type)
     } catch (err) {
         logger(`onHover error`, err)
     }

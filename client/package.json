@@ -56,10 +56,10 @@
           "default": false,
           "description": "show debug messages"
         },
-        "ycmd.enable_hover_type": {
+        "ycmd.use_imprecise_get_type": {
           "type": "boolean",
-          "default": true,
-          "description": "GetType from ycmd by hover on variable"
+          "default": false,
+          "description": "use GetTypeImprecise subcommand instand of GetType, please see https://github.com/Valloric/ycmd/pull/609"
         }
       }
     },

@@ -53,7 +53,7 @@ getType
 * `ycmd.python`: Optional, python execuable path.
 * `ycmd.confirm_extra_conf`: Optional, see [ycm's Readme](https://github.com/Valloric/YouCompleteMe/blob/master/README.md#the-gycm_confirm_extra_conf-option)
 * `ycmd.enabled_languages`: Optional, default is `["c", "cpp"]`
-* `ycmd.use_imprecise_get_type`: Optional, default is false. please see https://github.com/Valloric/ycmd/pull/609 for more details.
+* `ycmd.use_imprecise_get_type`: Optional, default is false. please see [this link](https://github.com/richard1122/vscode-youcompleteme/issues/13) for more details.
 
 
 ## More languages

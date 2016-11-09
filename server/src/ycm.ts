@@ -141,7 +141,7 @@ export default class Ycm {
             logger('start', `optionsFile: ${optionsFile}`)
             ycm.process = await ycm._start(optionsFile)
             logger('start', `ycm started: ${ycm.process.pid}`)
-            await ycm.saveYcmdPidWindows()
+            if (process.platform === 'win32') await ycm.saveYcmdPidWindows()
             return ycm
         } catch (err) {
             throw err
@@ -192,7 +192,7 @@ export default class Ycm {
             const wmic = childProcess.spawn('wmic', [
                 'process', 'where', `(ParentProcessId=${parentPid})`, 'get', 'processid'
             ])
-            wmic.on('error', (err) => logger('killOnWindows error', err))
+            wmic.on('error', (err) => logger('saveYcmdPidWindows error', err))
             let output = ''
             wmic.stdout.on('data', (data: string) => output += data)
             wmic.stdout.on('close', () => {

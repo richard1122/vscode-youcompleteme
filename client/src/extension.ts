@@ -67,18 +67,14 @@ export function activate(context: ExtensionContext) {
     workspace.onDidChangeTextDocument((event) => {
         let whenToLint = workspace.getConfiguration('ycmd').get('lint_run') as string
         if (whenToLint === 'onType') {
-            client.sendNotification<string>({
-                method: 'lint'
-            }, window.activeTextEditor.document.uri.toString())
+            client.sendNotification('lint', window.activeTextEditor.document.uri.toString())
         }
     })
 
     workspace.onDidSaveTextDocument((event) => {
         let whenToLint = workspace.getConfiguration('ycmd').get('lint_run') as string
         if (whenToLint === 'onSave') {
-            client.sendNotification<string>({
-                method: 'lint'
-            }, window.activeTextEditor.document.uri.toString())
+            client.sendNotification('lint', window.activeTextEditor.document.uri.toString())
         }
     })
 }

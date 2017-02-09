@@ -167,8 +167,8 @@ export default class YcmRequest {
     }
 
     private generateHmac(data: string | Buffer): Buffer
-    private generateHmac(data: string | Buffer, encoding: string): string
-    private generateHmac(data: string | Buffer, encoding: string = null): Buffer | string {
+    private generateHmac(data: string | Buffer, encoding: 'base64'): string
+    private generateHmac(data: string | Buffer, encoding: 'base64' = null): Buffer | string {
         return crypto.createHmac('sha256', this.secret).update(data).digest(encoding)
     }
 

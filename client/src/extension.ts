@@ -50,7 +50,7 @@ export function activate(context: ExtensionContext) {
     disposable = client.start()
 
     commands.registerCommand('ycm.lint', (args) => {
-        client.sendNotification("lint", window.activeTextEditor.document.uri.toString())
+        client.sendNotification('lint', window.activeTextEditor.document.uri.toString())
     })
 
     commands.registerCommand('ycm.FixIt', async (args) => {
@@ -60,7 +60,7 @@ export function activate(context: ExtensionContext) {
         client.sendNotification('lint', window.activeTextEditor.document.uri.toString())
     })
 
-    // Push the disposable to the context's subscriptions so that the 
+    // Push the disposable to the context's subscriptions so that the
     // client can be deactivated on extension deactivation
     context.subscriptions.push(disposable)
 }

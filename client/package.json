@@ -10,7 +10,7 @@
     "url": "https://github.com/richard1122/vscode-youcompleteme"
   },
   "engines": {
-    "vscode": "^1.4.0"
+    "vscode": "^1.6.0"
   },
   "categories": [
     "Languages"
@@ -77,19 +77,20 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
-    "compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
+    "vscode:prepublish": "tsc -p ./",
+    "compile": "tsc -watch -p ./",
     "postinstall": "node ./node_modules/vscode/bin/install",
-    "typings": "typings prune && typings install",
     "lint": "tslint -c ../tslint.json './src/*' && tslint -c ../tslint.json '../server/src/*'"
   },
   "devDependencies": {
-    "tslint": "^3.15.1",
-    "typescript": "^2.1.0-dev.20161108",
-    "typings": "^1.3.3",
-    "vscode": "^0.11.0"
+    "@types/mocha": "^2.2.32",
+    "@types/node": "^6.0.40",
+    "tslint": "^4.4.2",
+    "typescript": "^2.1.6",
+    "typings": "^2.1.0",
+    "vscode": "^1.0.3"
   },
   "dependencies": {
-    "vscode-languageclient": "2.6.0"
+    "vscode-languageclient": "^3.0.3"
   }
 }

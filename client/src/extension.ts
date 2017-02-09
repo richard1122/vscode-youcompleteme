@@ -2,8 +2,6 @@
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
-/// <reference path="../node_modules/vscode/typings/node.d.ts" />
-/// <reference path="../node_modules/vscode/typings/index.d.ts" />
 
 'use strict'
 import {MapYcmFixItToVSCodeEdit} from './utils'
@@ -43,24 +41,23 @@ export function activate(context: ExtensionContext) {
 
     // Create the language client and start the client.
     client = new LanguageClient('ycm-language-server', serverOptions, clientOptions)
-    client.onNotification<string>({method: 'error'}, (params) => {
-        window.showErrorMessage(`[ycm] ${params}`)
+    client.onReady().then(() => {
+        client.onNotification('error', (params) => {
+            window.showErrorMessage(`[ycm] ${params}`)
+        })
     })
+
     disposable = client.start()
 
     commands.registerCommand('ycm.lint', (args) => {
-        client.sendNotification<string>({
-            method: 'lint'
-        }, window.activeTextEditor.document.uri.toString())
+        client.sendNotification("lint", window.activeTextEditor.document.uri.toString())
     })
 
     commands.registerCommand('ycm.FixIt', async (args) => {
         const fixit = args as YcmFixIt
         const edits = MapYcmFixItToVSCodeEdit(fixit)
         const success = await workspace.applyEdit(edits)
-        client.sendNotification<string>({
-            method: 'lint'
-        }, window.activeTextEditor.document.uri.toString())
+        client.sendNotification('lint', window.activeTextEditor.document.uri.toString())
     })
 
     // Push the disposable to the context's subscriptions so that the 

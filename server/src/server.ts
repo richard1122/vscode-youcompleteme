@@ -10,7 +10,7 @@ import {
     TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
     InitializeParams, InitializeResult, TextDocumentPositionParams,
     CompletionItem, CompletionItemKind, Hover, SignatureHelp,
-    Command, CodeActionParams
+    Command, CodeActionParams, NotificationType
 } from 'vscode-languageserver'
 import Ycm, {Settings} from './ycm'
 import * as _ from 'lodash'
@@ -65,7 +65,7 @@ connection.onCodeAction(async (param) => {
     }) as Command[]
 })
 
-connection.onNotification<YcmFixIt>({ method: 'FixIt'}, async (args) => {
+connection.onNotification<YcmFixIt, string>(new NotificationType<YcmFixIt, string>('FixIt'), async (args) => {
     logger('On FixIt', JSON.stringify(args))
 })
 
@@ -262,9 +262,7 @@ connection.onDidCloseTextDocument((params) => {
 });
 */
 
-connection.onNotification<string>({
-    method: 'lint'
-}, (uri) => {
+connection.onNotification('lint', (uri) => {
     getIssues(documents.get(uri))
 })
 

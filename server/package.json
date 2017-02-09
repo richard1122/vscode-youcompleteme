@@ -16,7 +16,7 @@
     "@types/mocha": "^2.2.32"
   },
   "devDependencies": {
-    "typescript": "^2.2.0",
+    "typescript": "^2.1.6",
     "typings": "^2.1.0"
   },
   "scripts": {

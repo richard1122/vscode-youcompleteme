@@ -64,17 +64,17 @@ export function activate(context: ExtensionContext) {
     // client can be deactivated on extension deactivation
     context.subscriptions.push(disposable)
 
-    workspace.onDidChangeTextDocument((event) => {
-        let whenToLint = workspace.getConfiguration('ycmd').get('lint_run') as string
-        if (whenToLint === 'onType') {
-            client.sendNotification('lint', window.activeTextEditor.document.uri.toString())
-        }
-    })
+    // workspace.onDidChangeTextDocument((event) => {
+    //     let whenToLint = workspace.getConfiguration('ycmd').get('lint_run') as string
+    //     if (whenToLint === 'onType') {
+    //         client.sendNotification('lint', window.activeTextEditor.document.uri.toString())
+    //     }
+    // })
 
-    workspace.onDidSaveTextDocument((event) => {
-        let whenToLint = workspace.getConfiguration('ycmd').get('lint_run') as string
-        if (whenToLint === 'onSave') {
-            client.sendNotification('lint', window.activeTextEditor.document.uri.toString())
-        }
-    })
+    // workspace.onDidSaveTextDocument((event) => {
+    //     let whenToLint = workspace.getConfiguration('ycmd').get('lint_run') as string
+    //     if (whenToLint === 'onSave') {
+    //         client.sendNotification('lint', window.activeTextEditor.document.uri.toString())
+    //     }
+    // })
 }

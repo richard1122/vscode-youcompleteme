@@ -114,31 +114,32 @@ export default class YcmRequest {
     }
 
     private checkUnknownExtraConf(body: any) {
-        if (!!body && _.isArray(body.errors) && body.errors.length === 1) {
-            const error = body.errors[0] as YcmError
-            if (error.exception.TYPE === 'UnknownExtraConf') {
-                const unknownConfError = error as YcmExtraConfError
-                const req = {filepath: unknownConfError.exception.extra_conf_file}
-                this.window.showInformationMessage<ConfirmExtraConfActionItem>(`[Ycm] Found ${unknownConfError.exception.extra_conf_file}. Load? `, {
-                    title: 'Load',
-                    path: unknownConfError.exception.extra_conf_file
-                }, {
-                    title: 'Ignore',
-                    path: unknownConfError.exception.extra_conf_file
-                }).then(it => {
-                    if (it.title === 'Load') {
-                        this._request('/load_extra_conf_file', req)
-                    } else {
-                        this._request('/ignore_extra_conf_file', req)
-                    }
-                })
-                throw new Error('ExtraConfFile question found.')
-            }
+        if (!body || !body.exception) return
+        const error = body as YcmError
+        const type = body.exception.TYPE
+
+        if (type === 'UnknownExtraConf') {
+            const req = {filepath: error.exception.extra_conf_file}
+            this.window.showInformationMessage<ConfirmExtraConfActionItem>(`[Ycm] Found ${error.exception.extra_conf_file}. Load? `, {
+                title: 'Load',
+                path: error.exception.extra_conf_file
+            }, {
+                title: 'Ignore',
+                path: error.exception.extra_conf_file
+            }).then(it => {
+                if (it.title === 'Load') {
+                    this._request('/load_extra_conf_file', req)
+                } else {
+                    this._request('/ignore_extra_conf_file', req)
+                }
+            })
+            throw new Error('ExtraConfFile question found.')
         }
-        if (!!body && body.exception && body.exception.TYPE === 'NoExtraConfDetected') {
+        if (body.exception.TYPE === 'NoExtraConfDetected') {
             this.window.showErrorMessage('[Ycm] No .ycm_extra_conf.py file detected, please read ycmd docs for more details.')
             throw new Error('NoExtraConfDetected')
         }
+        throw error
     }
 
     private buildRequest(): RequestType {
@@ -227,9 +228,11 @@ export type RequestType = {
 
 export type YcmError = {
     exception: {
-        TYPE: string,
-        traceback: string
+        TYPE: string
+        [index: string]: string
     }
+    message: string,
+    traceback: string
 }
 
 export type YcmExtraConfError = YcmError & {

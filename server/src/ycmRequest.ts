@@ -75,7 +75,6 @@ export default class YcmRequest {
             }
             const req = http.request(message, (res) => {
                 logger('_request', `status code: ${res.statusCode}`)
-                if (res.statusCode < 200 || res.statusCode > 299) reject(new Error('Network failed'))
                 res.setEncoding('utf8')
                 const mac = res.headers['x-ycm-hmac'] as string
                 let response = ''
@@ -85,7 +84,15 @@ export default class YcmRequest {
                 res.on('end', () => {
                     logger('_request', response)
                     if (!this.verifyHmac(response, mac)) reject(new Error('Hmac check failed.'))
-                    else resolve(JSON.parse(response))
+                    else {
+                        const body = JSON.parse(response)
+                        try {
+                            this.checkUnknownExtraConf(body)
+                            resolve(body)
+                        } catch (e) {
+                            reject(e)
+                        }
+                    }
                 })
                 res.on('error', (err) => {
                     reject(err)
@@ -103,7 +110,6 @@ export default class YcmRequest {
         }
         const params = this.buildRequest()
         const res = await this._request(endpoint, params)
-        this.checkUnknownExtraConf(res)
         return res
     }
 
@@ -128,6 +134,10 @@ export default class YcmRequest {
                 })
                 throw new Error('ExtraConfFile question found.')
             }
+        }
+        if (!!body && body.exception && body.exception.TYPE === 'NoExtraConfDetected') {
+            this.window.showErrorMessage("[Ycm] No .ycm_extra_conf.py file detected, please read ycmd docs for more details.")
+            throw new Error('NoExtraConfDetected')
         }
     }
 

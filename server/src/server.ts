@@ -67,6 +67,7 @@ connection.onCodeAction(async (param) => {
     } catch (e) {
         logger('onCodeAction', e)
     }
+    return []
 })
 
 connection.onNotification<YcmFixIt, string>(new NotificationType<YcmFixIt, string>('FixIt'), async (args) => {

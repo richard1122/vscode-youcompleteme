@@ -37,7 +37,6 @@ export default class Ycm {
     private window: RemoteWindow
 
     private settings: Settings
-    private YcmdPid: number
 
     private constructor(settings: Settings) {
         this.settings = settings
@@ -136,12 +135,13 @@ export default class Ycm {
             ycm.workingDir = workingDir
             ycm.window = window
             const data = await Promise.all<any>([ycm.findUnusedPort(), ycm.generateRandomSecret(), ycm.readDefaultOptions()]) as [number, Buffer, any]
-            logger('start', `data: ${data}`)
+            logger('start', `unused port: ${data[0]}`)
+            logger('start', `random secret: ${data[1].toString('hex')}`)
+            logger('start', `default options: ${JSON.stringify(data[2])}`)
             const optionsFile = await ycm.processData(data)
             logger('start', `optionsFile: ${optionsFile}`)
             ycm.process = await ycm._start(optionsFile)
             logger('start', `ycm started: ${ycm.process.pid}`)
-            if (process.platform === 'win32') await ycm.saveYcmdPidWindows()
             return ycm
         } catch (err) {
             throw err
@@ -152,11 +152,12 @@ export default class Ycm {
     private static Initializing = false
     public static async getInstance(workingDir: string, settings: Settings, window: RemoteWindow): Promise<Ycm> {
         if (Ycm.Initializing) return new Promise<Ycm>((resolve, reject) => {
-            setTimeout(() => resolve(Ycm.getInstance(workingDir, settings, window)), 50)
+            logger('getInstance', 'ycm is initializing, delay 200ms...')
+            setTimeout(() => resolve(Ycm.getInstance(workingDir, settings, window)), 200)
         })
         if (!Ycm.Instance || Ycm.Instance.workingDir !== workingDir || !_.isEqual(Ycm.Instance.settings, settings) || !Ycm.Instance.process) {
             logger('getInstance', `ycm is restarting`)
-            if (!!Ycm.Instance) Ycm.Instance.reset()
+            if (!!Ycm.Instance) await Ycm.Instance.reset()
             try {
                 Ycm.Initializing = true
                 Ycm.Instance = await Ycm.start(workingDir, settings, window)
@@ -175,36 +176,18 @@ export default class Ycm {
         }
     }
 
-    public reset() {
+    public async reset() {
         if (!!this.process) {
-            if (!!this.YcmdPid) process.kill(this.YcmdPid)
-            // TODO: kill cmd.exe may not kill python
-            this.process.kill()
+            try {
+                const request = this.buildRequest(null)
+                await request.request('shutdown')
+            } catch (e) {
+                logger('reset', e)
+            }
             this.process = null
             this.port = null
             this.hmacSecret = null
         }
-    }
-
-    private saveYcmdPidWindows() {
-        return new Promise((resolve, reject) => {
-            const parentPid = this.process.pid
-            const wmic = childProcess.spawn('wmic', [
-                'process', 'where', `(ParentProcessId=${parentPid})`, 'get', 'processid'
-            ])
-            wmic.on('error', (err) => logger('saveYcmdPidWindows error', err))
-            let output = ''
-            wmic.stdout.on('data', (data: string) => output += data)
-            wmic.stdout.on('close', () => {
-                output.split(/\s+/)
-                    .filter(pid => /^\d+$/.test(pid))
-                    .map(pid => parseInt(pid))
-                    .filter(pid => pid !== parentPid && pid > 0 && pid < Infinity)
-                    .forEach(pid => this.YcmdPid = pid)
-                logger('saveYcmdPidWindows', `windows ycmd pid=${this.YcmdPid}`)
-                resolve()
-            })
-        })
     }
 
     private buildRequest(currentDocument: string, position: Position = null, documents: TextDocuments = null, event: string = null) {

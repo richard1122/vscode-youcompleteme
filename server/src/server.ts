@@ -227,7 +227,7 @@ connection.onCompletion(async (textDocumentPosition: TextDocumentPositionParams)
 
 connection.onShutdown(async () => {
     logger('onShutdown')
-    Ycm.reset()
+    await Ycm.reset()
 })
 
 // connection.onExit(async () => {

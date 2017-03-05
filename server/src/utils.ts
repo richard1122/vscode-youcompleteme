@@ -141,7 +141,6 @@ export function mapYcmLocationToLocation(location: YcmLocation): Location {
 }
 
 export function crossPlatformBufferToString(buffer: Buffer): string {
-    if (process.platform === 'win32') return iconv.decode(buffer, 'gbk')
     return buffer.toString('utf8')
 }
 

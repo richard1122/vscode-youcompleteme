@@ -136,7 +136,7 @@ export default class YcmRequest {
             }
         }
         if (!!body && body.exception && body.exception.TYPE === 'NoExtraConfDetected') {
-            this.window.showErrorMessage("[Ycm] No .ycm_extra_conf.py file detected, please read ycmd docs for more details.")
+            this.window.showErrorMessage('[Ycm] No .ycm_extra_conf.py file detected, please read ycmd docs for more details.')
             throw new Error('NoExtraConfDetected')
         }
     }

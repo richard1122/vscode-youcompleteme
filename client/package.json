@@ -98,11 +98,11 @@
     "@types/mocha": "^2.2.32",
     "@types/node": "^6.0.40",
     "tslint": "^4.4.2",
-    "typescript": "^2.1.6",
+    "typescript": "^2.2.1",
     "typings": "^2.1.0",
     "vscode": "^1.0.3"
   },
   "dependencies": {
-    "vscode-languageclient": "^3.0.3"
+    "vscode-languageclient": "^3.1.0"
   }
 }

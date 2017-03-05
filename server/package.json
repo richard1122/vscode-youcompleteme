@@ -10,14 +10,14 @@
   "dependencies": {
     "iconv-lite": "^0.4.13",
     "lodash": "^4.17.4",
-    "vscode-languageserver": "^3.0.4",
+    "vscode-languageserver": "^3.1.0",
     "vscode-uri": "1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^6.0.40",
-    "@types/mocha": "^2.2.32",
     "@types/lodash": "^4.14.54",
-    "typescript": "^2.1.6",
+    "@types/mocha": "^2.2.32",
+    "@types/node": "^6.0.40",
+    "typescript": "^2.2.1",
     "typings": "^2.1.0"
   },
   "scripts": {

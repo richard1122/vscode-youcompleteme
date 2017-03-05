@@ -116,6 +116,7 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticI
 export function mapYcmTypeToHover(res: YcmGetTypeResponse, language: string): Hover | null {
     if (res.message === 'Unknown type') return null
     if (res.message === 'Internal error: cursor not valid') return null
+    logger('mapYcmTypeToHover', `language: ${language}`)
     return {
         contents: {
             language: language,

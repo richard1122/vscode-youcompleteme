@@ -152,7 +152,7 @@ export default class YcmRequest {
             file_data: { }
         }
 
-        if (this.documents != null) {
+        if (this.documents) {
             this.documents.all().forEach(it => {
                 const url = crossPlatformUri(it.uri)
                 params.file_data[url] = {

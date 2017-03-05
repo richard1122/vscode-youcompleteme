@@ -54,15 +54,19 @@ connection.onInitialize((params): InitializeResult => {
 
 connection.onCodeAction(async (param) => {
     logger('onCodeAction', JSON.stringify(param))
-    const ycm = await getYcm()
-    const fixs = await ycm.fixIt(param.textDocument.uri, param.range.start, documents)
-    return fixs.map(it => {
-        return {
-            title: `Fix: ${it.text}`,
-            command: 'ycm.FixIt',
-            arguments: [it]
-        }
-    }) as Command[]
+    try {
+        const ycm = await getYcm()
+        const fixs = await ycm.fixIt(param.textDocument.uri, param.range.start, documents)
+        return fixs.map(it => {
+            return {
+                title: `Fix: ${it.text}`,
+                command: 'ycm.FixIt',
+                arguments: [it]
+            }
+        }) as Command[]
+    } catch (e) {
+        logger('onCodeAction', e)
+    }
 })
 
 connection.onNotification<YcmFixIt, string>(new NotificationType<YcmFixIt, string>('FixIt'), async (args) => {

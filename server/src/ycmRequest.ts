@@ -151,13 +151,16 @@ export default class YcmRequest {
             working_dir: this.workingDir,
             file_data: { }
         }
-        this.documents.all().forEach(it => {
-            const url = crossPlatformUri(it.uri)
-            params.file_data[url] = {
-                contents: it.getText(),
-                filetypes: [it.languageId]
-            }
-        })
+
+        if (this.documents != null) {
+            this.documents.all().forEach(it => {
+                const url = crossPlatformUri(it.uri)
+                params.file_data[url] = {
+                    contents: it.getText(),
+                    filetypes: [it.languageId]
+                }
+            })
+        }
 
         if (!!this.position) {
             params.line_num = this.position.line + 1

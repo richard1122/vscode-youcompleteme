@@ -86,8 +86,8 @@ export default class YcmRequest {
                         logger('_request', response)
                         if (!this.verifyHmac(response, mac)) reject(new Error('Hmac check failed.'))
                         else {
-                            const body = JSON.parse(response)
                             try {
+                                const body = JSON.parse(response)
                                 this.checkUnknownExtraConf(body)
                                 resolve(body)
                             } catch (e) {

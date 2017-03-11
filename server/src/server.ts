@@ -16,6 +16,10 @@ import Ycm, {Settings} from './ycm'
 import * as _ from 'lodash'
 import {logger, loggerInit} from './utils'
 
+process.on('uncaughtException', err => {
+    logger('!!!uncaughtException!!!', err)
+})
+
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process))
 

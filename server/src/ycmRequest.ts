@@ -200,7 +200,6 @@ export default class YcmRequest {
         } catch (e) {
             logger('verifyHmac', e)
         }
-       
     }
 
     private signMessage(message: http.RequestOptions, path: string, payload: string) {

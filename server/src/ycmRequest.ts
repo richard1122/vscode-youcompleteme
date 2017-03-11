@@ -74,31 +74,37 @@ export default class YcmRequest {
                 message.headers['Content-Length'] = payload.length
             }
             const req = http.request(message, (res) => {
-                logger('_request', `status code: ${res.statusCode}`)
-                res.setEncoding('utf8')
-                const mac = res.headers['x-ycm-hmac'] as string
-                let response = ''
-                res.on('data', (chunk) => {
-                    response += chunk
-                })
-                res.on('end', () => {
-                    logger('_request', response)
-                    if (!this.verifyHmac(response, mac)) reject(new Error('Hmac check failed.'))
-                    else {
-                        const body = JSON.parse(response)
-                        try {
-                            this.checkUnknownExtraConf(body)
-                            resolve(body)
-                        } catch (e) {
-                            reject(e)
+                try {
+                    logger('_request', `status code: ${res.statusCode}`)
+                    res.setEncoding('utf8')
+                    const mac = res.headers['x-ycm-hmac'] as string
+                    let response = ''
+                    res.on('data', (chunk) => {
+                        response += chunk
+                    })
+                    res.on('end', () => {
+                        logger('_request', response)
+                        if (!this.verifyHmac(response, mac)) reject(new Error('Hmac check failed.'))
+                        else {
+                            const body = JSON.parse(response)
+                            try {
+                                this.checkUnknownExtraConf(body)
+                                resolve(body)
+                            } catch (e) {
+                                reject(e)
+                            }
                         }
-                    }
-                })
-                res.on('error', (err) => {
-                    reject(err)
-                })
+                    })
+                    res.on('error', (err) => {
+                        reject(err)
+                    })
+                } catch (e) {
+                    logger('_request http.request', e)
+                }
             })
-            req.write(payload)
+            if (!!payload) req.write(payload)
+            req.end()
+            logger('_request', 'req.end called')
         })
     }
 
@@ -187,9 +193,14 @@ export default class YcmRequest {
     }
 
     private async verifyHmac(data: string, hmac: string) {
-        const hmac2 = await this.generateHmac(data, 'base64')
-        if (!_.isString(hmac) || !_.isString(hmac2)) return false
-        return hmac === hmac2
+        try {
+            const hmac2 = await this.generateHmac(data, 'base64')
+            if (!_.isString(hmac) || !_.isString(hmac2)) return false
+            return hmac === hmac2
+        } catch (e) {
+            logger('verifyHmac', e)
+        }
+       
     }
 
     private signMessage(message: http.RequestOptions, path: string, payload: string) {

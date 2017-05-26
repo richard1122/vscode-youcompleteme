@@ -161,4 +161,3 @@ export function logger(tag: string, ...args: any[]) {
     if (isDebug) console.log.apply(console, args)
     /* tslint:enable:no-console */
 }
-

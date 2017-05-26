@@ -105,7 +105,6 @@ documents.onDidChangeContent(async (change) => {
 })
 
 // The settings interface describe the server relevant settings part
-
 async function getYcm(): Promise<Ycm> {
     if (!workspaceRoot || !workspaceConfiguration)
         return await new Promise<Ycm>((resolve, reject) => setTimeout(() => getYcm(), 100))

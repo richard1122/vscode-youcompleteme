@@ -14,7 +14,7 @@ import {
 } from 'vscode-languageserver'
 import Ycm, {Settings} from './ycm'
 import * as _ from 'lodash'
-import {logger, loggerInit} from './utils'
+import {logger, loggerInit, crossPlatformUri} from './utils'
 
 process.on('uncaughtException', err => {
     logger('!!!uncaughtException!!!', err)
@@ -36,7 +36,7 @@ let workspaceRoot: string
 let workspaceConfiguration: Settings
 
 connection.onInitialize((params): InitializeResult => {
-    workspaceRoot = params.rootPath
+    workspaceRoot = crossPlatformUri(params.rootUri)
     return {
         capabilities: {
             // Tell the client that the server works in FULL text document sync mode
@@ -189,35 +189,6 @@ documents.onDidOpen(async (event) => {
         logger('onDidOpen error', err)
     }
 })
-
-// function validateTextDocument(textDocument: TextDocument): void {
-// 	let diagnostics: Diagnostic[] = []
-// 	let lines = textDocument.getText().split(/\r?\n/g)
-// 	let problems = 0
-// 	for (var i = 0; i < lines.length && problems < maxNumberOfProblems; i++) {
-// 		let line = lines[i]
-// 		let index = line.indexOf('typescript')
-// 		if (index >= 0) {
-// 			problems++
-// 			diagnostics.push({
-// 				severity: DiagnosticSeverity.Warning,
-// 				range: {
-// 					start: { line: i, character: index},
-// 					end: { line: i, character: index + 10 }
-// 				},
-// 				message: `${line.substr(index, 10)} should be spelled TypeScript`,
-// 				source: 'ex'
-// 			})
-// 		}
-// 	}
-// 	// Send the computed diagnostics to VSCode.
-// 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
-// }
-
-// connection.onDidChangeWatchedFiles((change) => {
-// 	// Monitored files have change in VSCode
-// 	connection.logger('We recevied an file change event')
-// })
 
 // This handler provides the initial list of the completion items.
 connection.onCompletion(async (textDocumentPosition: TextDocumentPositionParams): Promise<CompletionItem[]> => {

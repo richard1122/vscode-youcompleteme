@@ -71,10 +71,10 @@ export function activate(context: ExtensionContext) {
     //     }
     // })
 
-    // workspace.onDidSaveTextDocument((event) => {
-    //     let whenToLint = workspace.getConfiguration('ycmd').get('lint_run') as string
-    //     if (whenToLint === 'onSave') {
-    //         client.sendNotification('lint', window.activeTextEditor.document.uri.toString())
-    //     }
-    // })
+    workspace.onDidSaveTextDocument((event) => {
+        let whenToLint = workspace.getConfiguration('ycmd').get('lint_run') as string
+        if (whenToLint === 'onSave') {
+            client.sendNotification('lint', window.activeTextEditor.document.uri.toString())
+        }
+    })
 }

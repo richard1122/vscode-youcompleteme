@@ -60,6 +60,13 @@
           "type": "boolean",
           "default": false,
           "description": "use GetTypeImprecise subcommand instand of GetType, please see https://github.com/Valloric/ycmd/pull/609"
+        },
+        "ycmd.lint_run": {
+          "type": "string",
+          "default": "onCall",
+          "enum": [
+            "onCall", "onSave"
+          ]
         }
       }
     },

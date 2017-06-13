@@ -278,7 +278,7 @@ export default class Ycm {
                 reported_issues.unshift(header_issues[0]);
             }
 
-            return utils_1.mapYcmDiagnosticToLanguageServerDiagnostic(reported_issues).filter(it => !!it.range);
+            return mapYcmDiagnosticToLanguageServerDiagnostic(reported_issues).filter(it => !!it.range);
         } catch (err) {
             return []
         }

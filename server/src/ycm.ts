@@ -250,8 +250,35 @@ export default class Ycm {
             logger(`readyToParse`, `ycm responsed ${response.length} items`)
             const issues = response as YcmDiagnosticItem[]
             const uri = crossPlatformUri(documentUri)
-            return mapYcmDiagnosticToLanguageServerDiagnostic(issues.filter(it => it.location.filepath === uri))
-                .filter(it => !!it.range)
+
+            let reported_issues = issues.filter(it => it.location.filepath === uri);
+
+            // If there are issues we come across in files other than the
+            // one we're looking at, it's probably from an included header.
+            // Since they may be the root source of errors in the file
+            // we're looking at, instead of filtering them all out, let's
+            // just pick the first one to display and hard-code it to
+            // show up on the first line, since the language
+            // server diagnostic interface doesn't appear to be able to
+            // report errors in different files.
+            const header_issues = issues.filter(it => it.location.filepath !== uri);
+            if (header_issues.length > 0) {
+                header_issues[0].text = header_issues[0].text +
+                    " in #included file " +
+                    header_issues[0].location.filepath + ": " +
+                    header_issues[0].location.line_num;
+
+                header_issues[0].location.column_num = 1;
+                header_issues[0].location.line_num = 1;
+                header_issues[0].location_extent.start.line_num = 1;
+                header_issues[0].location_extent.start.column_num = 1;
+                header_issues[0].location_extent.end.line_num = 1;
+                header_issues[0].location_extent.end.column_num = 1000;
+
+                reported_issues.unshift(header_issues[0]);
+            }
+
+            return utils_1.mapYcmDiagnosticToLanguageServerDiagnostic(reported_issues).filter(it => !!it.range);
         } catch (err) {
             return []
         }

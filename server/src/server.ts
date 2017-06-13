@@ -91,7 +91,7 @@ connection.onHover(async (event): Promise<Hover> => {
 connection.onDefinition(async (event) => {
     const ycm = await getYcm()
     try {
-        return await ycm.goToDefinition(event.textDocument.uri, event.position, documents)
+        return await ycm.goTo(event.textDocument.uri, event.position, documents)
     } catch (err) {
         logger(`onDefinition error`, err)
     }

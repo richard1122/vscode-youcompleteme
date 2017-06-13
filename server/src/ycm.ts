@@ -222,9 +222,9 @@ export default class Ycm {
         return mapYcmTypeToHover(type, documents.get(documentUri).languageId)
     }
 
-    public async goToDefinition(documentUri: string, position: Position, documents: TextDocuments) {
-        const definition = await this.runCompleterCommand(documentUri, position, documents, 'GoToDefinition')
-        logger('goToDefinition', JSON.stringify(definition))
+    public async goTo(documentUri: string, position: Position, documents: TextDocuments) {
+        const definition = await this.runCompleterCommand(documentUri, position, documents, 'GoTo')
+        logger('goTo', JSON.stringify(definition))
         return mapYcmLocationToLocation(definition as YcmLocation)
     }
 

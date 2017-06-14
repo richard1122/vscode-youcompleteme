@@ -10,7 +10,7 @@
     "url": "https://github.com/richard1122/vscode-youcompleteme"
   },
   "engines": {
-    "vscode": "^1.6.0"
+    "vscode": "^1.8.0"
   },
   "categories": [
     "Languages"

@@ -52,7 +52,7 @@ getType
 * `ycmd.global_extra_config`: Optional, see [ycm's Readme](https://github.com/Valloric/YouCompleteMe/blob/master/README.md#the-gycm_global_ycm_extra_conf-option)
 * `ycmd.python`: Optional, python execuable path.
 * `ycmd.confirm_extra_conf`: Optional, see [ycm's Readme](https://github.com/Valloric/YouCompleteMe/blob/master/README.md#the-gycm_confirm_extra_conf-option)
-* `ycmd.enabled_languages`: Optional, default is `["c", "cpp"]`
+* `ycmd.enabled_languages`: Optional, default is `["c", "cpp"]`. For objc, please add `objective-c`.
 * `ycmd.use_imprecise_get_type`: Optional, default is false. please see [this link](https://github.com/richard1122/vscode-youcompleteme/issues/13) for more details.
 * `ycmd.lint_run`: Optional, default is `onCall`. Change to `onSave` if you want auto lint after save action.
 

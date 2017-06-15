@@ -3,6 +3,7 @@ import * as url from 'url'
 import * as _ from 'lodash'
 import * as http from 'http'
 import * as qs from 'querystring'
+import { mapVSCodeLanguageIdToYcmFileType } from './utils'
 
 import {
     IPCMessageReader, IPCMessageWriter,
@@ -161,9 +162,10 @@ export default class YcmRequest {
         if (this.documents) {
             this.documents.all().forEach(it => {
                 const url = crossPlatformUri(it.uri)
+                const type = mapVSCodeLanguageIdToYcmFileType(it.languageId)
                 params.file_data[url] = {
                     contents: it.getText(),
-                    filetypes: [it.languageId]
+                    filetypes: [type]
                 }
             })
         }

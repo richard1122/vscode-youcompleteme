@@ -161,3 +161,11 @@ export function logger(tag: string, ...args: any[]) {
     if (isDebug) console.log.apply(console, args)
     /* tslint:enable:no-console */
 }
+
+let extensions = new Map<string, string>()
+extensions.set('objective-c', 'objc')
+export function mapVSCodeLanguageIdToYcmFileType(languageId: string) {
+    const type = extensions.get(languageId)
+    if (type) return type
+    else return languageId
+}

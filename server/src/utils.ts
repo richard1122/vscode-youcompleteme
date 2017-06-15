@@ -116,6 +116,8 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticI
 export function mapYcmTypeToHover(res: YcmGetTypeResponse, language: string): Hover | null {
     if (res.message === 'Unknown type') return null
     if (res.message === 'Internal error: cursor not valid') return null
+    // TODO: we should retry if we get no translation unit, since it means
+    //       that libclang is still processing the file.
     if (res.message === 'Internal error: no translation unit') return null
     logger('mapYcmTypeToHover', `language: ${language}`)
     return {

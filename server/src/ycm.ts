@@ -234,7 +234,7 @@ export default class Ycm {
             let currDocString = currDoc.getText()
             let currOffset = currDoc.offsetAt(position)
             let nameStart = currOffset
-            // search for the current identifier
+            // get the current identifier
             while (currDocString[currOffset].match(/[A-Z|a-z|0-9|_]/))
                 currOffset++
             while (currDocString[nameStart].match(/[A-Z|a-z|0-9|_]/))
@@ -252,9 +252,9 @@ export default class Ycm {
     }
 
     public async getDocHover(documentUri, position, documents, imprecise = false) {
-            const completion = await this.runCompleterCommand(documentUri, position, documents, imprecise ? 'GetDocImprecise' : 'GetDoc')
-            logger('getDocHover', JSON.stringify(completion))
-            return mapYcmDocToHover(completion, documents.get(documentUri).languageId)
+            const doc = await this.runCompleterCommand(documentUri, position, documents, imprecise ? 'GetDocImprecise' : 'GetDoc')
+            logger('getDocHover', JSON.stringify(doc))
+            return mapYcmDocToHover(doc, documents.get(documentUri).languageId)
     }
 
     public async getDoc(documentUri: string, position: Position, documents: TextDocuments) {

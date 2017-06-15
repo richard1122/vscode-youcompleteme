@@ -88,8 +88,10 @@ connection.onHover(async (event): Promise<Hover> => {
         try {
             // libclang does not return anything for getDoc if there is no doxygen
             // documentation for an identifier, so we next try to see if we
-            // can get a member function signature from a completion (since getType
-            // returns an unhelpful "<bound member function>" for them).
+            // can get a member function signature from a completion (since getType()
+            // returns an unhelpful "<bound member function>" for them).  This isn't
+            // ideal since we won't be able to tell exactly which overload is being
+            // called.
             let matchingCompletion = await ycm.getExactMatchingCompletion(event.textDocument.uri, event.position, documents)
             if ( matchingCompletion ) {
                 return {
@@ -100,8 +102,10 @@ connection.onHover(async (event): Promise<Hover> => {
                 } as Hover
             }
             else {
-                // We're either on a non-member function or a variable
-                return await ycm.getType(event.textDocument.uri, event.position, documents, workspaceConfiguration.ycmd.use_imprecise_get_type)
+                // We're either on a non-member function or a variable, so just use getType().
+                // We called getDoc above with workspaceConfiguration.ycmd.use_imprecise_get_type
+                // so, no reason to have ycmd parse the file again.
+                return await ycm.getType(event.textDocument.uri, event.position, documents, true)
             }
         }
         catch (err) {

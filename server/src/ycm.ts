@@ -233,11 +233,6 @@ export default class Ycm {
         logger('getDoc', JSON.stringify(doc))
     }
 
-    public async getDocQuick(documentUri: string, position: Position, documents: TextDocuments) {
-        const doc = await this.runCompleterCommand(documentUri, position, documents, 'GetDocQuick')
-        logger('getDocQuick', JSON.stringify(doc))
-    }
-
     public async getDetailedDiagnostic(documentUri: string, position: Position, documents: TextDocuments) {
         const request = this.buildRequest(documentUri, position, documents)
         const response = await request.request('detailed_diagnostic')

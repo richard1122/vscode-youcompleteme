@@ -289,7 +289,7 @@ export default class Ycm {
             }
             logger(`readyToParse->reported_issues`, JSON.stringify(reported_issues))
 
-            return mapYcmDiagnosticToLanguageServerDiagnostic(reported_issues).filter(it => !!it.range);
+            return mapYcmDiagnosticToLanguageServerDiagnostic(reported_issues).filter(it => !!it.range)
         } catch (err) {
             return []
         }

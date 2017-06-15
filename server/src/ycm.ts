@@ -246,7 +246,7 @@ export default class Ycm {
             const issues = response as YcmDiagnosticItem[]
             const uri = crossPlatformUri(documentUri)
 
-            let reported_issues = issues.filter(it => it.location.filepath === uri);
+            const [reported_issues, header_issues] = _.partition(issues, it => it.location.filepath === uri)
 
             // If there are issues we come across in files other than the
             // one we're looking at, it's probably from an included header.
@@ -256,22 +256,38 @@ export default class Ycm {
             // show up on the first line, since the language
             // server diagnostic interface doesn't appear to be able to
             // report errors in different files.
-            const header_issues = issues.filter(it => it.location.filepath !== uri);
             if (header_issues.length > 0) {
-                header_issues[0].text = header_issues[0].text +
-                    " in #included file " +
-                    header_issues[0].location.filepath + ": " +
-                    header_issues[0].location.line_num;
+                const issue = header_issues[0]
+                const relative = path.relative(path.parse(uri).dir, path.parse(issue.location.filepath).dir)
+                let location = issue.location.filepath
+                if (relative.split(/[\/\\\\]/).length <= 1) {
+                    location = path.normalize(`./${relative}/${path.parse(issue.location.filepath).base}`)
+                }
 
-                header_issues[0].location.column_num = 1;
-                header_issues[0].location.line_num = 1;
-                header_issues[0].location_extent.start.line_num = 1;
-                header_issues[0].location_extent.start.column_num = 1;
-                header_issues[0].location_extent.end.line_num = 1;
-                header_issues[0].location_extent.end.column_num = 1000;
-
-                reported_issues.unshift(header_issues[0]);
+                reported_issues.unshift({
+                    ...issue,
+                    text: `${issue.text} in included file ${location}:${issue.location.line_num}`,
+                    location: {
+                        ...issue.location,
+                        column_num: 1,
+                        line_num: 1,
+                    },
+                    location_extent: {
+                        ...issue.location_extent,
+                        start: {
+                            ...issue.location_extent.start,
+                            line_num: 1,
+                            column_num: 1,
+                        },
+                        end: {
+                            ...issue.location_extent.end,
+                            line_num: 1,
+                            column_num: 1000,
+                        }
+                    }
+                })
             }
+            logger(`readyToParse->reported_issues`, JSON.stringify(reported_issues))
 
             return mapYcmDiagnosticToLanguageServerDiagnostic(reported_issues).filter(it => !!it.range);
         } catch (err) {

@@ -17,7 +17,7 @@ export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: Yc
             label: it.menu_text || it.insertion_text,
             detail: it.detailed_info,
             insertText: it.insertion_text,
-            documentation: it.detailed_info,
+            // documentation: it.detailed_info,
             sortText: _.padStart(index.toString(), len, '0')
         } as CompletionItem
         switch (it.kind || it.extra_menu_info) {
@@ -125,16 +125,16 @@ export function mapYcmTypeToHover(res: YcmGetTypeResponse, language: string): Ho
             language: language,
             // clang gives us 'declared_type => resolved_type';
             // we show just the more user-friendly declared type
-            value: res.message.split(" => ")[0]
+            value: res.message.split(' => ')[0]
         } as MarkedString
     } as Hover
 }
 
 export function mapYcmDocToHover(res: YcmCompletionItem, language: string) {
     logger('mapYcmDocToHover', `language: ${language}`)
-    const full_str = res.detailed_info.toString();
+    const full_str = res.detailed_info.toString()
     // signature is the first line
-    const signature = full_str.split("\n")[0]
+    const signature = full_str.split('\n')[0]
     // brief documentation follows, up until the 'Type:' line
     const brief_doc = full_str.substring(signature.length + 1,
         full_str.search('\nType:'))

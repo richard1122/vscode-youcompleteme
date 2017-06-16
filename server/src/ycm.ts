@@ -15,7 +15,8 @@ import {
     logger,
     crossPlatformUri,
     mapYcmTypeToHover,
-    mapYcmLocationToLocation
+    mapYcmLocationToLocation,
+    mapYcmDocToHover
 } from './utils'
 
 import {
@@ -226,6 +227,34 @@ export default class Ycm {
         const definition = await this.runCompleterCommand(documentUri, position, documents, 'GoTo')
         logger('goTo', JSON.stringify(definition))
         return mapYcmLocationToLocation(definition as YcmLocation)
+    }
+
+    public async getExactMatchingCompletion(documentUri, position, documents) {
+            let currDoc = documents.get(documentUri)
+            let currDocString = currDoc.getText()
+            let currOffset = currDoc.offsetAt(position)
+            let nameStart = currOffset
+            // get the current identifier
+            while (currDocString[currOffset].match(/[A-Z|a-z|0-9|_]/))
+                currOffset++
+            while (currDocString[nameStart].match(/[A-Z|a-z|0-9|_]/))
+                nameStart--
+            let identifierName = currDocString.slice(nameStart + 1, currOffset)
+            // find exact match for current identifier
+            let completionArray = await this.completion(documentUri, currDoc.positionAt(currOffset - 1), documents)
+            return completionArray.find(function (elem) {
+                // if a file has compilation problems, ycmd will fall back to ID-based
+                // completions, which have only `extra_menu_info: "[ID]"` as additional
+                // info, so we filter those useless ones out by looking to see if they
+                // have what we really want: the `detail` info.
+                return elem.insertText === identifierName  && !!elem.detail
+            })
+    }
+
+    public async getDocHover(documentUri, position, documents, imprecise = false) {
+            const doc = await this.runCompleterCommand(documentUri, position, documents, imprecise ? 'GetDocImprecise' : 'GetDoc')
+            logger('getDocHover', JSON.stringify(doc))
+            return mapYcmDocToHover(doc, documents.get(documentUri).languageId)
     }
 
     public async getDoc(documentUri: string, position: Position, documents: TextDocuments) {

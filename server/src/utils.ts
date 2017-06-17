@@ -14,11 +14,19 @@ import * as YcmTypes from '../../client/typings/ycm'
 export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: YcmTypes.YcmCompletionItem[] = []): CompletionItem[] {
     const len = CompletionItems.length.toString().length
     return _.map(CompletionItems, (it, index) => {
+        // put the signature (detail_info) on the first line;
+        // note our onHover() expects it to be there
+        let doc_str = it.detailed_info
+        if (it.extra_data && it.extra_data.doc_string) {
+            // libclang attempts to get some brief doc string for the
+            // completion; append that if it is found
+            doc_str += '\n' + it.extra_data.doc_string
+        }
         const item = {
             label: it.menu_text || it.insertion_text,
             detail: it.extra_menu_info,
             insertText: it.insertion_text,
-            documentation: it.detailed_info,
+            documentation: doc_str,
             sortText: _.padStart(index.toString(), len, '0')
         } as CompletionItem
         switch (it.kind || it.extra_menu_info) {
@@ -117,11 +125,16 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmTypes.YcmDi
 export function mapYcmTypeToHover(res: YcmTypes.YcmGetTypeResponse, language: string): Hover | null {
     if (res.message === 'Unknown type') return null
     if (res.message === 'Internal error: cursor not valid') return null
+    // TODO: we should retry if we get no translation unit, since it means
+    //       that libclang is still processing the file.
+    if (res.message === 'Internal error: no translation unit') return null
     logger('mapYcmTypeToHover', `language: ${language}`)
     return {
         contents: {
             language: language,
-            value: res.message
+            // clang gives us 'declared_type => resolved_type';
+            // we show just the more user-friendly declared type
+            value: res.message.split(' => ')[0]
         } as MarkedString
     } as Hover
 }
@@ -140,6 +153,24 @@ export function mapYcmLocationToLocation(location: YcmTypes.YcmLocation): Locati
             },
         }
     } as Location
+}
+
+export function mapYcmDocToHover(res: YcmTypes.YcmCompletionItem, language: string) {
+    logger('mapYcmDocToHover', `language: ${language}`)
+    const full_str = res.detailed_info.toString()
+    // signature is the first line
+    const signature = full_str.split('\n')[0]
+    // brief documentation follows, up until the 'Type:' line
+    const brief_doc = full_str.substring(signature.length + 1,
+        full_str.search('\nType:'))
+    return {
+        contents: [{
+            language: language,
+            value: signature
+        },
+        MarkedString.fromPlainText(brief_doc)
+        ] as MarkedString[]
+    } as Hover
 }
 
 export function crossPlatformBufferToString(buffer: Buffer): string {

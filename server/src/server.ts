@@ -83,9 +83,36 @@ connection.onNotification<YcmTypes.YcmFixIt, string>(new NotificationType<YcmTyp
 connection.onHover(async (event): Promise<Hover> => {
     const ycm = await getYcm()
     try {
-        return await ycm.getType(event.textDocument.uri, event.position, documents, workspaceConfiguration.ycmd.use_imprecise_get_type)
-    } catch (err) {
-        logger(`onHover error`, err)
+        return await ycm.getDocHover(event.textDocument.uri, event.position, documents, workspaceConfiguration.ycmd.use_imprecise_get_type)
+    }
+    catch (getDocErr) {
+        try {
+            // libclang does not return anything for getDoc if there is no doxygen
+            // documentation for an identifier, so we next try to see if we
+            // can get a member function signature from a completion (since getType()
+            // returns an unhelpful "<bound member function>" for them).  This isn't
+            // ideal since we won't be able to tell exactly which overload is being
+            // called.
+            let matchingCompletion = await ycm.getExactMatchingCompletion(event.textDocument.uri, event.position, documents)
+            if ( matchingCompletion ) {
+                return {
+                    contents: {
+                        language: documents.get(event.textDocument.uri).languageId,
+                        // we put the signature at the top of the completion detail
+                        value: matchingCompletion.documentation.split('\n\n')[0]
+                    }
+                } as Hover
+            }
+            else {
+                // We're either on a non-member function or a variable, so just use getType().
+                // We called getDoc above with workspaceConfiguration.ycmd.use_imprecise_get_type
+                // so, no reason to have ycmd parse the file again.
+                return await ycm.getType(event.textDocument.uri, event.position, documents, true)
+            }
+        }
+        catch (err) {
+            logger(`onHover error`, err)
+        }
     }
 })
 

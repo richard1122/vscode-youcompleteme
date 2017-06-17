@@ -4,6 +4,11 @@ export type YcmCompletionItem = {
     detailed_info: string
     extra_menu_info: string
     kind: string
+    extra_data?: YcmCompletionExtraData
+}
+
+export type YcmCompletionExtraData = {
+    doc_string: string
 }
 
 export type YcmLocation = {

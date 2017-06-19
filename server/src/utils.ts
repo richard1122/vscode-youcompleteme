@@ -158,9 +158,27 @@ export function mapYcmLocationToLocation(location: YcmTypes.YcmLocation): Locati
 export function mapYcmDocToHover(res: YcmTypes.YcmCompletionItem, language: string) {
     logger('mapYcmDocToHover', `language: ${language}`)
     const full_str = res.detailed_info.toString()
-    // signature is the first line
-    const signature = full_str.split('\n')[0]
-    // brief documentation follows, up until the 'Type:' line
+    let signature
+
+    // a signature can span multiple lines depending on how long
+    // it is, so we need a heuristic to figure out where to stop.
+    const regexpBraces = /{}$/m
+    const regexpNoParen = /^Type:[^(]*$/m
+    // `class` and `struct` signatures end with `{}\n`, so we try breaking there.
+    if (regexpBraces.test(full_str) ) {
+        signature = full_str.split('{}\n')[0] + '{}'
+    } else {
+        // if the `Type` line has no parenthesis, we go to the first newline
+        if (regexpNoParen.test(full_str) ) {
+            signature = full_str.split('\n')[0]
+        } else {
+            // we go to the closing parenthesis
+            signature = full_str.split(')')[0] + ')'
+        }
+    }
+
+    const typeBegin = full_str.search('\nType:')
+    // brief documentation follows signature, up until the 'Type:' line
     const brief_doc = full_str.substring(signature.length + 1,
         full_str.search('\nType:'))
     return {

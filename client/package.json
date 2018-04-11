@@ -10,7 +10,7 @@
     "url": "https://github.com/richard1122/vscode-youcompleteme"
   },
   "engines": {
-    "vscode": "^1.8.0"
+    "vscode": "^1.16.0"
   },
   "categories": [
     "Languages"
@@ -65,7 +65,8 @@
           "type": "string",
           "default": "onCall",
           "enum": [
-            "onCall", "onSave"
+            "onCall",
+            "onSave"
           ]
         }
       }
@@ -95,11 +96,11 @@
     "@types/mocha": "^2.2.32",
     "@types/node": "^7.0.22",
     "tslint": "^5.3.2",
-    "typescript": "^2.2.1",
+    "typescript": "^2.7.2",
     "typings": "^2.1.0",
-    "vscode": "^1.0.3"
+    "vscode": "^1.1.5"
   },
   "dependencies": {
-    "vscode-languageclient": "^3.2.1"
+    "vscode-languageclient": "^3.5.0"
   }
 }

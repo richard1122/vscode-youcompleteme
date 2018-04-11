@@ -8,16 +8,16 @@
     "node": "*"
   },
   "dependencies": {
-    "iconv-lite": "^0.4.13",
-    "lodash": "^4.17.4",
-    "vscode-languageserver": "^3.2.1",
-    "vscode-uri": "1.0.0"
+    "iconv-lite": "^0.4.21",
+    "lodash": "^4.17.5",
+    "vscode-languageserver": "^3.5.0",
+    "vscode-uri": "1.0.3"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.54",
     "@types/mocha": "^2.2.32",
     "@types/node": "^7.0.22",
-    "typescript": "^2.2.1",
+    "typescript": "^2.7.2",
     "typings": "^2.1.0"
   },
   "scripts": {

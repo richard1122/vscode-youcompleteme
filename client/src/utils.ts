@@ -1,4 +1,5 @@
 import { WorkspaceEdit, Uri, TextEdit, Position, Range} from 'vscode'
+import { YcmFixIt, YcmRange, YcmLocation, YcmChunk } from '../typings/ycm'
 
 export function MapYcmFixItToVSCodeEdit(fixIt: YcmFixIt): WorkspaceEdit {
     const chunks = YcmFixItToChunkFiles(fixIt)

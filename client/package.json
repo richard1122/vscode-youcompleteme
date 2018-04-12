@@ -89,15 +89,13 @@
     "compile": "tsc -watch -p ./",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "lint": "tslint -c ../tslint.json './src/*' && tslint -c ../tslint.json '../server/src/*'",
-    "test": "node out/test/index",
-    "typings": "typings install"
+    "test": "node out/test/index"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.32",
     "@types/node": "^7.0.22",
     "tslint": "^5.3.2",
     "typescript": "^2.7.2",
-    "typings": "^2.1.0",
     "vscode": "^1.1.5"
   },
   "dependencies": {

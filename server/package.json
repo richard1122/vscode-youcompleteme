@@ -17,12 +17,10 @@
     "@types/lodash": "^4.14.54",
     "@types/mocha": "^2.2.32",
     "@types/node": "^7.0.22",
-    "typescript": "^2.7.2",
-    "typings": "^2.1.0"
+    "typescript": "^2.7.2"
   },
   "scripts": {
     "compile": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc -p .",
-    "watch": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc --watch -p .",
-    "typings": "typings install"
+    "watch": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc --watch -p ."
   }
 }

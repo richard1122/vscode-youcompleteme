@@ -15,6 +15,7 @@ import {
 import Ycm, {Settings} from './ycm'
 import * as _ from 'lodash'
 import {logger, loggerInit, crossPlatformUri} from './utils'
+import * as YcmTypes from '../../client/typings/ycm'
 
 process.on('uncaughtException', err => {
     logger('!!!uncaughtException!!!', err)
@@ -74,7 +75,7 @@ connection.onCodeAction(async (param) => {
     return []
 })
 
-connection.onNotification<YcmFixIt, string>(new NotificationType<YcmFixIt, string>('FixIt'), async (args) => {
+connection.onNotification<YcmTypes.YcmFixIt, string>(new NotificationType<YcmTypes.YcmFixIt, string>('FixIt'), async (args) => {
     logger('On FixIt', JSON.stringify(args))
 })
 

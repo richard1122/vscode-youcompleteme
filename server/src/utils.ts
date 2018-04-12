@@ -9,8 +9,9 @@ import * as _ from 'lodash'
 import * as Buffer from 'buffer'
 import Uri from 'vscode-uri'
 const iconv = require('iconv-lite')
+import * as YcmTypes from '../../client/typings/ycm'
 
-export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: YcmCompletionItem[] = []): CompletionItem[] {
+export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: YcmTypes.YcmCompletionItem[] = []): CompletionItem[] {
     const len = CompletionItems.length.toString().length
     return _.map(CompletionItems, (it, index) => {
         const item = {
@@ -62,7 +63,7 @@ export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: Yc
     })
 }
 
-export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticItem[]): Diagnostic[] {
+export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmTypes.YcmDiagnosticItem[]): Diagnostic[] {
     return _.map(items, (it, index) => {
         const item = {
             range: null,
@@ -113,7 +114,7 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticI
     })
 }
 
-export function mapYcmTypeToHover(res: YcmGetTypeResponse, language: string): Hover | null {
+export function mapYcmTypeToHover(res: YcmTypes.YcmGetTypeResponse, language: string): Hover | null {
     if (res.message === 'Unknown type') return null
     if (res.message === 'Internal error: cursor not valid') return null
     logger('mapYcmTypeToHover', `language: ${language}`)
@@ -125,7 +126,7 @@ export function mapYcmTypeToHover(res: YcmGetTypeResponse, language: string): Ho
     } as Hover
 }
 
-export function mapYcmLocationToLocation(location: YcmLocation): Location {
+export function mapYcmLocationToLocation(location: YcmTypes.YcmLocation): Location {
     return {
         uri: Uri.file(location.filepath).toString(),
         range: {

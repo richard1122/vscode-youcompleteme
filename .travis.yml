@@ -2,8 +2,8 @@ language: node_js
 node_js:
 - node
 install:
-- cd $TRAVIS_BUILD_DIR/client && npm install && npm run typings
-- cd $TRAVIS_BUILD_DIR/server && npm install && npm run typings
+- cd $TRAVIS_BUILD_DIR/client && npm install
+- cd $TRAVIS_BUILD_DIR/server && npm install
 - npm install -g vsce
 script:
 - cd $TRAVIS_BUILD_DIR/client && npm run lint

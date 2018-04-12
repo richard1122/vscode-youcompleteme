@@ -10,6 +10,7 @@ import * as path from 'path'
 
 import { workspace, Disposable, ExtensionContext, window, commands } from 'vscode'
 import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind } from 'vscode-languageclient'
+import { YcmFixIt } from '../typings/ycm'
 
 let client: LanguageClient
 let disposable: Disposable

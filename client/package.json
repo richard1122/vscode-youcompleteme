@@ -87,9 +87,10 @@
   "scripts": {
     "vscode:prepublish": "tsc -p ./",
     "compile": "tsc -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install",
     "lint": "tslint -c ../tslint.json './src/*' && tslint -c ../tslint.json '../server/src/*'",
-    "test": "node out/test/index"
+    "test": "node out/test/index",
+    "update-vscode": "node ./node_modules/vscode/bin/install",
+    "postinstall": "node ./node_modules/vscode/bin/install"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.32",

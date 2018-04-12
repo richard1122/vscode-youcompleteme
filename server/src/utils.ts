@@ -1,3 +1,4 @@
+/// <reference path="../../client/typings/ycm.d.ts" />
 import {
     IPCMessageReader, IPCMessageWriter,
     createConnection, IConnection, TextDocumentSyncKind,
@@ -9,9 +10,9 @@ import * as _ from 'lodash'
 import * as Buffer from 'buffer'
 import Uri from 'vscode-uri'
 const iconv = require('iconv-lite')
-import * as YcmTypes from '../../client/typings/ycm'
 
-export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: YcmTypes.YcmCompletionItem[] = []): CompletionItem[] {
+
+export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: YcmCompletionItem[] = []): CompletionItem[] {
     const len = CompletionItems.length.toString().length
     return _.map(CompletionItems, (it, index) => {
         // put the signature (detail_info) on the first line;
@@ -71,7 +72,7 @@ export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: Yc
     })
 }
 
-export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmTypes.YcmDiagnosticItem[]): Diagnostic[] {
+export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticItem[]): Diagnostic[] {
     return _.map(items, (it, index) => {
         const item = {
             range: null,
@@ -122,7 +123,7 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmTypes.YcmDi
     })
 }
 
-export function mapYcmTypeToHover(res: YcmTypes.YcmGetTypeResponse, language: string): Hover | null {
+export function mapYcmTypeToHover(res: YcmGetTypeResponse, language: string): Hover | null {
     if (res.message === 'Unknown type') return null
     if (res.message === 'Internal error: cursor not valid') return null
     // TODO: we should retry if we get no translation unit, since it means
@@ -139,7 +140,7 @@ export function mapYcmTypeToHover(res: YcmTypes.YcmGetTypeResponse, language: st
     } as Hover
 }
 
-export function mapYcmLocationToLocation(location: YcmTypes.YcmLocation): Location {
+export function mapYcmLocationToLocation(location: YcmLocation): Location {
     return {
         uri: Uri.file(location.filepath).toString(),
         range: {
@@ -155,7 +156,7 @@ export function mapYcmLocationToLocation(location: YcmTypes.YcmLocation): Locati
     } as Location
 }
 
-export function mapYcmDocToHover(res: YcmTypes.YcmCompletionItem, language: string) {
+export function mapYcmDocToHover(res: YcmCompletionItem, language: string) {
     logger('mapYcmDocToHover', `language: ${language}`)
     const full_str = res.detailed_info.toString()
     let signature

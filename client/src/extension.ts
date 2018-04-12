@@ -2,15 +2,14 @@
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
-
 'use strict'
+/// <reference path="../typings/ycm.d.ts" />
 import {MapYcmFixItToVSCodeEdit} from './utils'
 
 import * as path from 'path'
 
 import { workspace, Disposable, ExtensionContext, window, commands } from 'vscode'
 import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind } from 'vscode-languageclient'
-import { YcmFixIt } from '../typings/ycm'
 
 let client: LanguageClient
 let disposable: Disposable
@@ -18,7 +17,8 @@ let disposable: Disposable
 export function activate(context: ExtensionContext) {
 
     // The server is implemented in node
-    let serverModule = context.asAbsolutePath(path.join('server', 'server.js'))
+    console.log(context.asAbsolutePath(path.join('server', 'server.js')))
+    let serverModule = context.asAbsolutePath(path.join('server', 'src', 'server.js'))
     // The debug options for the server
     let debugOptions = { execArgv: ['--nolazy', '--debug=6004'] }
 

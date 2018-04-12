@@ -4,6 +4,7 @@
 		"module": "commonjs",
 		"sourceMap": true,
 		"outDir": "../client/server",
+		"sourceRoot": "./src",
 		"lib": [
             "es2016"
         ]

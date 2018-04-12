@@ -1,3 +1,4 @@
+/// <reference path="../../client/typings/ycm.d.ts" />
 import * as net from 'net'
 import * as crypto from 'crypto'
 import * as childProcess from 'child_process'
@@ -7,7 +8,7 @@ import * as os from 'os'
 import * as _ from 'lodash'
 import * as url from 'url'
 import * as qs from 'querystring'
-import * as YcmTypes from '../../client/typings/ycm'
+
 
 import {
     mapYcmCompletionsToLanguageServerCompletions,
@@ -212,14 +213,14 @@ export default class Ycm {
     public async completion(documentUri: string, position: Position, documents: TextDocuments): Promise<CompletionItem[]> {
         const request = this.buildRequest(documentUri, position, documents)
         const response = await request.request('completions')
-        const completions = response['completions'] as YcmTypes.YcmCompletionItem[]
+        const completions = response['completions'] as YcmCompletionItem[]
         const res = mapYcmCompletionsToLanguageServerCompletions(completions)
         logger(`completion`, `ycm responsed ${res.length} items`)
         return res
     }
 
     public async getType(documentUri: string, position: Position, documents: TextDocuments, imprecise: boolean = false) {
-        const type = await this.runCompleterCommand(documentUri, position, documents, imprecise ? 'GetTypeImprecise' : 'GetType') as YcmTypes.YcmGetTypeResponse
+        const type = await this.runCompleterCommand(documentUri, position, documents, imprecise ? 'GetTypeImprecise' : 'GetType') as YcmGetTypeResponse
         logger('getType', JSON.stringify(type))
         return mapYcmTypeToHover(type, documents.get(documentUri).languageId)
     }
@@ -227,7 +228,7 @@ export default class Ycm {
     public async goTo(documentUri: string, position: Position, documents: TextDocuments) {
         const definition = await this.runCompleterCommand(documentUri, position, documents, 'GoTo')
         logger('goTo', JSON.stringify(definition))
-        return mapYcmLocationToLocation(definition as YcmTypes.YcmLocation)
+        return mapYcmLocationToLocation(definition as YcmLocation)
     }
 
     public async getExactMatchingCompletion(documentUri, position, documents) {
@@ -274,7 +275,7 @@ export default class Ycm {
             const response = await this.eventNotification(documentUri, null, documents, 'FileReadyToParse')
             if (!_.isArray(response)) return []
             logger(`readyToParse`, `ycm responsed ${response.length} items`)
-            const issues = response as YcmTypes.YcmDiagnosticItem[]
+            const issues = response as YcmDiagnosticItem[]
             const uri = crossPlatformUri(documentUri)
 
             const [reported_issues, header_issues] = _.partition(issues, it => it.location.filepath === uri)
@@ -328,7 +329,7 @@ export default class Ycm {
 
     public async fixIt(documentUri: string, position: Position, documents: TextDocuments) {
         const response = await this.runCompleterCommand(documentUri, position, documents, 'FixIt')
-        const fixits = response.fixits as YcmTypes.YcmFixIt[]
+        const fixits = response.fixits as YcmFixIt[]
         const uri = crossPlatformUri(documentUri)
         fixits.forEach(it => {
             if (it.text.indexOf(uri) !== -1)

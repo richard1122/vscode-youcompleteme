@@ -1,3 +1,4 @@
+/// <reference path="../../client/typings/ycm.d.ts" />
 import {
     IPCMessageReader, IPCMessageWriter,
     createConnection, IConnection, TextDocumentSyncKind,
@@ -9,16 +10,24 @@ import * as _ from 'lodash'
 import * as Buffer from 'buffer'
 import Uri from 'vscode-uri'
 const iconv = require('iconv-lite')
-import * as YcmTypes from '../../client/typings/ycm'
 
-export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: YcmTypes.YcmCompletionItem[] = []): CompletionItem[] {
+
+export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: YcmCompletionItem[] = []): CompletionItem[] {
     const len = CompletionItems.length.toString().length
     return _.map(CompletionItems, (it, index) => {
+        // put the signature (detail_info) on the first line;
+        // note our onHover() expects it to be there
+        let doc_str = it.detailed_info
+        if (it.extra_data && it.extra_data.doc_string) {
+            // libclang attempts to get some brief doc string for the
+            // completion; append that if it is found
+            doc_str += '\n' + it.extra_data.doc_string
+        }
         const item = {
             label: it.menu_text || it.insertion_text,
             detail: it.extra_menu_info,
             insertText: it.insertion_text,
-            documentation: it.detailed_info,
+            documentation: doc_str,
             sortText: _.padStart(index.toString(), len, '0')
         } as CompletionItem
         switch (it.kind || it.extra_menu_info) {
@@ -63,7 +72,7 @@ export function mapYcmCompletionsToLanguageServerCompletions(CompletionItems: Yc
     })
 }
 
-export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmTypes.YcmDiagnosticItem[]): Diagnostic[] {
+export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmDiagnosticItem[]): Diagnostic[] {
     return _.map(items, (it, index) => {
         const item = {
             range: null,
@@ -114,19 +123,24 @@ export function mapYcmDiagnosticToLanguageServerDiagnostic(items: YcmTypes.YcmDi
     })
 }
 
-export function mapYcmTypeToHover(res: YcmTypes.YcmGetTypeResponse, language: string): Hover | null {
+export function mapYcmTypeToHover(res: YcmGetTypeResponse, language: string): Hover | null {
     if (res.message === 'Unknown type') return null
     if (res.message === 'Internal error: cursor not valid') return null
+    // TODO: we should retry if we get no translation unit, since it means
+    //       that libclang is still processing the file.
+    if (res.message === 'Internal error: no translation unit') return null
     logger('mapYcmTypeToHover', `language: ${language}`)
     return {
         contents: {
             language: language,
-            value: res.message
+            // clang gives us 'declared_type => resolved_type';
+            // we show just the more user-friendly declared type
+            value: res.message.split(' => ')[0]
         } as MarkedString
     } as Hover
 }
 
-export function mapYcmLocationToLocation(location: YcmTypes.YcmLocation): Location {
+export function mapYcmLocationToLocation(location: YcmLocation): Location {
     return {
         uri: Uri.file(location.filepath).toString(),
         range: {
@@ -140,6 +154,42 @@ export function mapYcmLocationToLocation(location: YcmTypes.YcmLocation): Locati
             },
         }
     } as Location
+}
+
+export function mapYcmDocToHover(res: YcmCompletionItem, language: string) {
+    logger('mapYcmDocToHover', `language: ${language}`)
+    const full_str = res.detailed_info.toString()
+    let signature
+
+    // a signature can span multiple lines depending on how long
+    // it is, so we need a heuristic to figure out where to stop.
+    const regexpBraces = /{}$/m
+    const regexpNoParen = /^Type:[^(]*$/m
+    // `class` and `struct` signatures end with `{}\n`, so we try breaking there.
+    if (regexpBraces.test(full_str) ) {
+        signature = full_str.split('{}\n')[0] + '{}'
+    } else {
+        // if the `Type` line has no parenthesis, we go to the first newline
+        if (regexpNoParen.test(full_str) ) {
+            signature = full_str.split('\n')[0]
+        } else {
+            // we go to the closing parenthesis
+            signature = full_str.split(')')[0] + ')'
+        }
+    }
+
+    const typeBegin = full_str.search('\nType:')
+    // brief documentation follows signature, up until the 'Type:' line
+    const brief_doc = full_str.substring(signature.length + 1,
+        full_str.search('\nType:'))
+    return {
+        contents: [{
+            language: language,
+            value: signature
+        },
+        MarkedString.fromPlainText(brief_doc)
+        ] as MarkedString[]
+    } as Hover
 }
 
 export function crossPlatformBufferToString(buffer: Buffer): string {

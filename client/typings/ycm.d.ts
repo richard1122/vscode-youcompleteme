@@ -1,23 +1,28 @@
-export type YcmCompletionItem = {
+type YcmCompletionItem = {
     menu_text: string
     insertion_text: string
     detailed_info: string
     extra_menu_info: string
     kind: string
+    extra_data?: YcmCompletionExtraData
 }
 
-export type YcmLocation = {
+type YcmCompletionExtraData = {
+    doc_string: string
+}
+
+type YcmLocation = {
     filepath: string
     column_num: number
     line_num: number
 }
 
-export type YcmRange = {
+type YcmRange = {
     start: YcmLocation
     end: YcmLocation
 }
 
-export type YcmDiagnosticItem = {
+type YcmDiagnosticItem = {
     kind: 'ERROR' | 'WARNING'
     text: string
     ranges: YcmRange[]
@@ -26,17 +31,17 @@ export type YcmDiagnosticItem = {
     fixit_available: boolean
 }
 
-export type YcmChunk = {
+type YcmChunk = {
     range: YcmRange
     replacement_text: string
 }
 
-export type YcmFixIt = {
+type YcmFixIt = {
     chunks: YcmChunk[]
     text: string
     location: YcmLocation
 }
 
-export type YcmGetTypeResponse = {
+type YcmGetTypeResponse = {
     message: string
 }

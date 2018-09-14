@@ -60,11 +60,11 @@ export default class Ycm {
         return new Promise<any>((resolve, reject) => {
             fs.readFile(path.resolve(this.settings.ycmd.path, 'ycmd', 'default_settings.json'), {encoding: 'utf8'}, (err, data) => {
                 if (err) {
-                    fs.readFile(this.settings.ycmd.path, {encoding:'utf8'}, (err,data) =>{
+                    fs.readFile(this.settings.ycmd.path, {encoding: 'utf8'}, (err, data) => {
                         if (err) reject(err)
                         else resolve(JSON.parse(data))
                     })
-                }else{
+                } else {
                     resolve(JSON.parse(data))
                 }
             })

@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "iconv-lite": "^0.4.21",
-    "lodash": "^4.17.5",
+    "lodash": "^4.17.13",
     "vscode-languageserver": "^3.5.0",
     "vscode-uri": "1.0.3"
   },

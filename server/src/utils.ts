@@ -8,7 +8,7 @@ import {
 } from 'vscode-languageserver'
 import * as _ from 'lodash'
 import * as Buffer from 'buffer'
-import Uri from 'vscode-uri'
+import { URI } from 'vscode-uri'
 const iconv = require('iconv-lite')
 
 
@@ -142,7 +142,7 @@ export function mapYcmTypeToHover(res: YcmGetTypeResponse, language: string): Ho
 
 export function mapYcmLocationToLocation(location: YcmLocation): Location {
     return {
-        uri: Uri.file(location.filepath).toString(),
+        uri: URI.file(location.filepath).toString(),
         range: {
             start: {
                 line: location.line_num - 1,
@@ -197,7 +197,7 @@ export function crossPlatformBufferToString(buffer: Buffer): string {
 }
 
 export function crossPlatformUri(uri: string) {
-    return Uri.parse(uri).fsPath
+    return URI.parse(uri).fsPath
 }
 
 let isDebug = false

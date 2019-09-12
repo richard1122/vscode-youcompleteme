@@ -49,7 +49,7 @@ export default class Ycm {
         return new Promise<number>((resolve, reject) => {
             const server = net.createServer()
             server.listen(0, () => {
-                resolve(server.address().port)
+                resolve((server.address() as net.AddressInfo).port)
                 server.close()
             })
             server.on('error', (err) => reject(err))

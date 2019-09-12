@@ -98,7 +98,7 @@ connection.onHover(async (event): Promise<Hover> => {
                     contents: {
                         language: documents.get(event.textDocument.uri).languageId,
                         // we put the signature at the top of the completion detail
-                        value: matchingCompletion.documentation.split('\n\n')[0]
+                        value: matchingCompletion.documentation
                     }
                 } as Hover
             }

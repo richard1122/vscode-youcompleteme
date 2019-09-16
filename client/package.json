@@ -16,7 +16,9 @@
     "Programming Languages"
   ],
   "activationEvents": [
-    "*"
+    "onLanguage:cpp",
+    "onLanguage:c",
+    "onLanguage:objective-c"
   ],
   "main": "./out/src/extension",
   "contributes": {

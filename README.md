@@ -1,6 +1,6 @@
 # Deprecated
 
-I'm using [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) extensions for c/c++.
+I'm using [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) extension for c/c++.
 
 # vscode-youcompleteme
 

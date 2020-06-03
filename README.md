@@ -1,3 +1,7 @@
+# Deprecated
+
+I'm using [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) extensions for c/c++.
+
 # vscode-youcompleteme
 
 [![Build Status](https://travis-ci.org/richard1122/vscode-youcompleteme.svg?branch=master)](https://travis-ci.org/richard1122/vscode-youcompleteme)

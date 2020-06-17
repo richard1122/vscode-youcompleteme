@@ -294,11 +294,21 @@ export default class Ycm {
             // show up on the first line, since the language
             // server diagnostic interface doesn't appear to be able to
             // report errors in different files.
+
             if (header_issues.length > 0) {
                 const issue = header_issues[0]
-                const relative = path.relative(path.parse(uri).dir, path.parse(issue.location.filepath).dir)
+                const filepathDir = path.parse(issue.location.filepath).dir
+                let relative = path.relative(path.parse(uri).dir, filepathDir)
                 let location = issue.location.filepath
+                let useRelative = false
                 if (relative.split(/[\/\\\\]/).length <= 1) {
+                    useRelative = true
+                } else {
+                    relative = path.relative(this.workingDir, path.parse(issue.location.filepath).dir)
+                    useRelative = !relative.startsWith('..')
+                }
+
+                if (useRelative) {
                     location = path.normalize(`./${relative}/${path.parse(issue.location.filepath).base}`)
                 }
 
